@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <meta name="theme-color" content="#070A12" />
+  <meta name="theme-color" content="#000000" />
 
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -12,1054 +12,822 @@
   <link rel="manifest" href="./manifest.webmanifest" />
   <link rel="apple-touch-icon" href="./icons/icon-192.png" />
 
-  <title>Barber Turnos</title>
+  <title>Turnos</title>
 
   <style>
     :root{
       color-scheme: dark;
-
-      --bg0:#070A12;
-      --bg1:#0B1020;
-      --card: rgba(18, 26, 45, .62);
-      --card2: rgba(12, 18, 33, .70);
-
+      --bg:#000;
       --text:#EAF0FF;
-      --muted:#A4B3D6;
-
-      --stroke: rgba(160, 195, 255, .16);
-      --stroke2: rgba(255,255,255,.06);
-
-      --shadow0: 0 14px 40px rgba(0,0,0,.55);
-      --shadow1: 0 8px 22px rgba(0,0,0,.45);
-      --shadowIn: inset 0 1px 0 rgba(255,255,255,.08), inset 0 -1px 0 rgba(0,0,0,.35);
+      --muted:#9CB0D6;
 
       --blue:#4EA6FF;
       --red:#FF4E6A;
       --amber:#FFD45A;
-      --violet:#B48CFF;
       --green:#5CF56F;
 
-      --r14: 14px;
-      --r18: 18px;
-      --r999: 999px;
+      --card: rgba(255,255,255,.04);
+      --stroke: rgba(255,255,255,.08);
+
+      --shadow: 0 18px 46px rgba(0,0,0,.68);
+      --inset: inset 0 1px 0 rgba(255,255,255,.07), inset 0 -1px 0 rgba(0,0,0,.55);
+      --r: 18px;
     }
 
-    *{ box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    *{ box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
     body{
       margin:0;
       font-family: -apple-system, system-ui, Segoe UI, Roboto, Arial;
       color: var(--text);
-      background:
-        radial-gradient(1200px 700px at 20% -10%, rgba(78,166,255,.22), transparent 55%),
-        radial-gradient(900px 600px at 85% 0%, rgba(180,140,255,.20), transparent 55%),
-        radial-gradient(900px 700px at 40% 115%, rgba(92,245,111,.10), transparent 55%),
-        linear-gradient(180deg, var(--bg0), var(--bg1));
+      background: var(--bg);
       min-height: 100vh;
     }
 
-    .wrap{ padding: 16px; max-width: 980px; margin: 0 auto; }
-    h1{
-      margin: 0 0 12px;
-      font-size: 18px;
-      letter-spacing: .2px;
+    .wrap{
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 16px;
+      padding-bottom: 22px;
       display:flex;
-      align-items:center;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .top{
+      display:flex;
+      align-items:flex-start;
       justify-content: space-between;
-      gap: 10px;
-    }
-    .sub{
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    .row{ display:flex; gap:12px; flex-wrap: wrap; }
-
-    .card{
-      position: relative;
-      flex: 1 1 280px;
-      border-radius: var(--r18);
+      gap: 12px;
       padding: 14px;
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
-      background-color: var(--card);
+      border-radius: var(--r);
+      background: var(--card);
       border: 1px solid var(--stroke);
-      box-shadow: var(--shadow0);
-      backdrop-filter: blur(12px);
-      overflow: hidden;
-    }
-    .card::before{
-      content:"";
-      position:absolute; inset:-1px;
-      background: radial-gradient(700px 250px at 20% 0%, rgba(78,166,255,.14), transparent 60%),
-                  radial-gradient(700px 250px at 80% 0%, rgba(180,140,255,.12), transparent 60%);
-      pointer-events:none;
-      opacity:.55;
-    }
-    .card > *{ position:relative; z-index:1; }
-
-    h2{
-      margin: 0 0 8px;
-      color: rgba(234,240,255,.82);
-      font-size: 13px;
-      font-weight: 700;
-      letter-spacing:.25px;
-      text-transform: none;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
     }
 
-    .big{
-      font-size: 30px;
-      font-weight: 900;
-      letter-spacing: -0.03em;
-      line-height: 1.05;
-      text-shadow: 0 10px 30px rgba(0,0,0,.45);
-    }
-    .muted{ color: var(--muted); font-size: 12px; }
-    .divider{ height:1px; background: rgba(160,195,255,.14); margin: 12px 0; }
+    .label{ font-size: 12px; color: var(--muted); }
+    .now{ font-size: 30px; font-weight: 900; letter-spacing: -0.03em; line-height: 1.05; }
+    .eta{ font-size: 18px; font-weight: 800; }
+    .tiny{ font-size: 12px; color: rgba(234,240,255,.72); margin-top: 6px; }
 
-    .pill{
+    .badge{
       display:inline-flex;
       align-items:center;
       gap:8px;
       padding: 8px 10px;
-      border-radius: var(--r999);
-      border:1px solid rgba(160,195,255,.18);
-      background: rgba(10,15,28,.55);
-      box-shadow: var(--shadowIn);
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+      box-shadow: var(--inset);
       font-size: 12px;
-      backdrop-filter: blur(10px);
     }
-    .dot{ width:10px; height:10px; border-radius: var(--r999); display:inline-block; box-shadow: 0 0 18px rgba(92,245,111,.38); }
+    .dot{ width:10px; height:10px; border-radius: 999px; display:inline-block; box-shadow: 0 0 18px rgba(92,245,111,.32); }
 
-    /* Inputs */
-    input[type="time"], input[type="number"], input[type="text"], select{
-      width: 100%;
-      background: rgba(8,12,22,.65);
-      border: 1px solid rgba(160,195,255,.18);
-      color: var(--text);
-      border-radius: var(--r14);
-      padding: 11px 12px;
-      font-size: 14px;
-      box-shadow: var(--shadowIn);
-      outline: none;
-    }
-    input::placeholder{ color: rgba(164,179,214,.7); }
-    input:focus, select:focus{
-      border-color: rgba(78,166,255,.55);
-      box-shadow: 0 0 0 3px rgba(78,166,255,.18), var(--shadowIn);
+    .center{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 10px 0;
     }
 
-    /* List */
-    .list{ display:flex; flex-direction: column; gap:10px; }
-    .item{
-      display:flex; justify-content: space-between; gap: 10px;
-      padding: 12px;
-      border-radius: var(--r14);
-      background: rgba(8,12,22,.55);
-      border: 1px solid rgba(160,195,255,.14);
-      box-shadow: var(--shadow1), var(--shadowIn);
-      backdrop-filter: blur(10px);
-    }
-    .item strong{ font-size: 14px; }
-    .item .meta{ display:flex; flex-direction: column; gap: 6px; align-items: flex-end; text-align: right; }
-
-    .grid2{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
-    .right{ display:flex; gap:10px; justify-content:flex-end; flex-wrap: wrap; }
-    .tiny{ font-size: 11px; color: rgba(234,240,255,.68); }
-
-    /* Neon buttons */
-    button{
-      border: 0;
-      border-radius: var(--r14);
-      padding: 14px 16px;
-      font-weight: 900;
-      font-size: 16px;
-      cursor:pointer;
-      user-select: none;
+    /* === Botón circular principal con ring === */
+    .mainBtn{
+      width: 260px;
+      height: 260px;
+      border-radius: 999px;
       position: relative;
+      display:grid;
+      place-items:center;
+      border: 0;
+      background: transparent;
+      cursor:pointer;
+      user-select:none;
       transform: translateZ(0);
-      transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
-    }
-    .btnBase{
-      background: rgba(8,12,22,.72);
-      color: var(--text);
-      border: 1px solid rgba(160,195,255,.16);
-      box-shadow: 0 10px 22px rgba(0,0,0,.46), var(--shadowIn);
-      overflow:hidden;
-    }
-    .btnBase::before{
-      content:"";
-      position:absolute; inset:-2px;
-      background: radial-gradient(280px 120px at 30% 0%, rgba(255,255,255,.10), transparent 60%);
-      opacity:.75;
-      pointer-events:none;
-    }
-    .btnBase::after{
-      content:"";
-      position:absolute; inset:-1px;
-      border-radius: var(--r14);
-      box-shadow: 0 0 0 1px rgba(255,255,255,.05);
-      pointer-events:none;
     }
 
-    /* Neon ring glow per variant */
-    .btnPrimary{ --g: var(--blue); }
-    .btnDanger{ --g: var(--red); }
-    .btnWarn{ --g: var(--amber); }
-    .btnViolet{ --g: var(--violet); }
-    .btnOk{ --g: var(--green); }
-
-    .btnPrimary, .btnDanger, .btnWarn, .btnViolet, .btnOk{
-      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
-      background-color: rgba(8,12,22,.72);
-      border: 1px solid rgba(160,195,255,.14);
-      box-shadow: 0 12px 26px rgba(0,0,0,.52), 0 0 0 1px rgba(255,255,255,.04), var(--shadowIn);
+    .ring{
+      position:absolute;
+      inset: 0;
+      border-radius: 999px;
+      background:
+        conic-gradient(var(--ringFill) var(--p), rgba(255,255,255,.06) 0);
+      filter: drop-shadow(0 0 18px rgba(78,166,255,.28));
     }
-    .btnPrimary::after, .btnDanger::after, .btnWarn::after, .btnViolet::after, .btnOk::after{
-      content:"";
-      position:absolute; inset:-1px;
-      border-radius: var(--r14);
-      box-shadow:
-        0 0 0 1px rgba(255,255,255,.06),
-        0 0 18px color-mix(in oklab, var(--g) 45%, transparent),
-        0 0 48px color-mix(in oklab, var(--g) 18%, transparent);
-      pointer-events:none;
-      opacity:.9;
-    }
-
-    /* Press + pulse */
-    button:active{ transform: translateY(1px) scale(.99); filter: brightness(.98); }
-    button:focus{ outline:none; }
-
-    .btnSmall{ padding: 10px 12px; font-size: 14px; border-radius: 12px; }
-    .btnSmall::after{ border-radius: 12px; }
-
-    /* Touch ripple-ish pulse */
-    @keyframes pulse {
-      0% { transform: scale(0.85); opacity: .85; }
-      100% { transform: scale(1.25); opacity: 0; }
-    }
-    .pulse{
-      position:absolute; inset:0;
-      display:block;
-      pointer-events:none;
-    }
-    .pulse::after{
+    .ring::after{
       content:"";
       position:absolute;
-      left: 50%; top: 50%;
-      width: 10px; height: 10px;
-      transform: translate(-50%,-50%);
+      inset: 10px;
       border-radius: 999px;
-      background: color-mix(in oklab, var(--g) 55%, transparent);
-      box-shadow: 0 0 24px color-mix(in oklab, var(--g) 60%, transparent);
-      animation: pulse .45s ease-out;
+      background: #000;
+      border: 1px solid rgba(255,255,255,.08);
+      box-shadow: var(--inset);
     }
 
-    /* Banners */
-    .banner{
-      padding: 12px;
-      border-radius: var(--r14);
-      border: 1px solid rgba(160,195,255,.18);
-      background: rgba(8,12,22,.62);
-      box-shadow: var(--shadow1), var(--shadowIn);
-      display:none;
-      margin-top: 10px;
+    .core{
       position: relative;
-      overflow:hidden;
-      backdrop-filter: blur(10px);
+      z-index: 2;
+      width: 210px;
+      height: 210px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      border: 1px solid rgba(255,255,255,.10);
+      box-shadow: 0 18px 46px rgba(0,0,0,.7), var(--inset);
+      display:flex;
+      flex-direction: column;
+      align-items:center;
+      justify-content:center;
+      gap: 10px;
+      text-align:center;
     }
-    .banner::before{
+
+    .core::before{
       content:"";
-      position:absolute; inset:-1px;
-      background: radial-gradient(680px 180px at 10% 0%, rgba(78,166,255,.16), transparent 60%),
-                  radial-gradient(680px 180px at 90% 0%, rgba(180,140,255,.12), transparent 60%);
-      opacity:.85;
+      position:absolute;
+      inset:-1px;
+      border-radius: 999px;
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,.05),
+        0 0 30px rgba(78,166,255,.22);
+      pointer-events:none;
+      opacity: .9;
+    }
+
+    .actionText{
+      font-size: 22px;
+      font-weight: 1000;
+      letter-spacing: .2px;
+    }
+    .subText{
+      font-size: 12px;
+      color: rgba(234,240,255,.78);
+      padding: 0 18px;
+    }
+    .countdown{
+      font-size: 34px;
+      font-weight: 1000;
+      letter-spacing: -0.03em;
+      line-height: 1;
+    }
+
+    .mainBtn:active .core{ transform: translateY(1px) scale(.995); }
+
+    /* === Botón Espera === */
+    .bottomRow{
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px;
+      border-radius: var(--r);
+      background: var(--card);
+      border: 1px solid var(--stroke);
+      box-shadow: var(--shadow);
+    }
+
+    .waitBtn{
+      width: 84px;
+      height: 84px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      box-shadow: 0 14px 36px rgba(0,0,0,.66), var(--inset);
+      color: var(--text);
+      font-weight: 1000;
+      cursor:pointer;
+      position: relative;
+    }
+    .waitBtn::after{
+      content:"";
+      position:absolute;
+      inset:-1px;
+      border-radius: 999px;
+      box-shadow: 0 0 18px rgba(78,166,255,.28);
       pointer-events:none;
     }
-    .banner strong{ font-size: 13px; position:relative; z-index:1; }
-    .banner .muted{ position:relative; z-index:1; display:block; margin-top:4px; }
+    .waitBtn:active{ transform: translateY(1px) scale(.995); }
 
-    dialog::backdrop{ background: rgba(0,0,0,.62); }
+    /* Acciones pequeñas debajo */
+    .miniRow{
+      display:flex;
+      gap: 10px;
+      justify-content: space-between;
+      align-items:center;
+      margin-top: 10px;
+    }
+    .miniBtn{
+      flex: 1;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.03);
+      color: var(--text);
+      padding: 12px 12px;
+      font-weight: 1000;
+      box-shadow: var(--inset);
+      cursor:pointer;
+    }
+    .miniBtnBlue{ border-color: rgba(78,166,255,.35); box-shadow: 0 0 18px rgba(78,166,255,.14), var(--inset); }
+    .miniBtnRed{ border-color: rgba(255,78,106,.32); box-shadow: 0 0 18px rgba(255,78,106,.12), var(--inset); }
+    .miniBtn:active{ transform: translateY(1px); }
+
+    /* === Cola iconos === */
+    .queueIcons{
+      display:flex;
+      align-items:center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content:flex-end;
+      max-width: 280px;
+    }
+    .person{
+      width: 22px;
+      height: 22px;
+      opacity: .95;
+      filter: drop-shadow(0 0 10px rgba(78,166,255,.25));
+    }
+    .qText{
+      font-size: 12px;
+      color: rgba(234,240,255,.75);
+      margin-top: 6px;
+      text-align:right;
+    }
+
+    /* === Modal === */
+    dialog::backdrop{ background: rgba(0,0,0,.70); }
     dialog{ border:0; padding:0; background: transparent; }
     .sheet{
-      background: rgba(8,12,22,.92);
-      border:1px solid rgba(160,195,255,.20);
-      border-radius: var(--r18);
+      width: min(520px, calc(100vw - 26px));
+      border-radius: 18px;
+      background: rgba(0,0,0,.92);
+      border: 1px solid rgba(255,255,255,.12);
+      box-shadow: var(--shadow);
       padding: 14px;
-      max-width: 560px;
-      box-shadow: var(--shadow0);
-      backdrop-filter: blur(14px);
     }
-    .sheet h2{ margin:0 0 10px; }
-    .kbd{
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono";
-      font-size: 11px; padding: 2px 6px;
-      border:1px solid rgba(160,195,255,.22);
-      border-radius: 10px;
-      background: rgba(8,12,22,.7);
-      color: rgba(234,240,255,.82);
+    .sheet h3{ margin:0 0 8px; font-size: 16px; }
+    .sheet .muted{ color: var(--muted); font-size: 12px; }
+    .sheet input[type="text"], .sheet select{
+      width: 100%;
+      margin-top: 10px;
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(255,255,255,.12);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 12px;
+      font-size: 14px;
+      outline:none;
+      box-shadow: var(--inset);
     }
+
+    .sheet .row{
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+      justify-content:flex-end;
+    }
+    .btn{
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.04);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-weight: 1000;
+      cursor:pointer;
+      box-shadow: var(--inset);
+    }
+    .btnBlue{ border-color: rgba(78,166,255,.38); box-shadow: 0 0 20px rgba(78,166,255,.18), var(--inset); }
+    .btnRed{ border-color: rgba(255,78,106,.35); box-shadow: 0 0 20px rgba(255,78,106,.16), var(--inset); }
+    .btn:active{ transform: translateY(1px); }
+
+    .hintLine{
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+      font-size: 12px;
+      color: rgba(234,240,255,.8);
+    }
+
+    /* Registro */
+    .logList{
+      margin-top: 10px;
+      display:flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 52vh;
+      overflow:auto;
+      padding-right: 6px;
+    }
+    .logItem{
+      padding: 10px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+    }
+    .logItem strong{ display:block; font-size: 13px; margin-bottom: 4px; }
+    .logItem .muted{ font-size: 12px; }
   </style>
 </head>
 
 <body>
   <div class="wrap">
-    <h1>
-      <span>Barber Turnos</span>
-      <span class="sub">Dark Neon · PWA</span>
-    </h1>
-
-    <datalist id="nameSuggestions"></datalist>
-
-    <div class="row">
-      <div class="card">
-        <h2>Estado</h2>
-        <div class="row" style="align-items:center; justify-content: space-between;">
-          <div>
-            <div class="muted">Ahora</div>
-            <div class="big" id="now">--:--</div>
-          </div>
-          <div class="pill">
-            <span class="dot" id="statusDot" style="background:#5cf56f"></span>
-            <span id="statusText">VERDE</span>
-          </div>
-        </div>
-
-        <div class="divider"></div>
-        <div class="muted">Fin estimado (cola + reservas + margen)</div>
-        <div class="big" id="eta">--:--</div>
-        <div class="toast" id="etaExplain"></div>
-
-        <div class="banner" id="colorBanner">
-          <strong id="colorTitle">Color</strong>
-          <span class="muted" id="colorBody"></span>
-        </div>
-
-        <div class="banner" id="adviceBanner">
-          <strong id="adviceTitle">Aceptación</strong>
-          <span class="muted" id="adviceBody"></span>
-        </div>
+    <div class="top">
+      <div>
+        <div class="label">Ahora</div>
+        <div class="now" id="now">--:--</div>
+        <div class="tiny" id="statusLine">—</div>
       </div>
 
-      <div class="card">
-        <h2>Acciones</h2>
-        <div class="row">
-          <button class="btnBase btnPrimary" id="addClient">+ Cliente</button>
-          <button class="btnBase btnDanger" id="finishClient">Finalizar</button>
+      <div style="text-align:right;">
+        <div class="badge">
+          <span class="dot" id="dot"></span>
+          <span id="statusText">VERDE</span>
         </div>
-
-        <div class="divider"></div>
-        <div class="muted" style="margin-bottom:8px;">Color (paralelo)</div>
-        <div class="row">
-          <button class="btnBase btnViolet" id="setColorClient">Asignar color…</button>
-          <button class="btnBase btnViolet" id="colorWait40">Esperar 40</button>
-          <button class="btnBase btnViolet" id="colorWait45">Esperar 45</button>
-          <button class="btnBase btnWarn" id="attendColor">Atender color</button>
-          <button class="btnBase btnOk" id="resumeClient">Volver al corte</button>
-        </div>
-
-        <div class="divider"></div>
-        <div class="tiny">
-          Si el color vence, tocás <span class="kbd">Atender color</span>: pausa el corte y después volvés.
-        </div>
+        <div class="label" style="margin-top:10px;">Salida estimada</div>
+        <div class="eta" id="eta">--:--</div>
+        <div class="tiny" id="etaExplain"></div>
       </div>
     </div>
 
-    <div class="row">
-      <div class="card">
-        <h2>Cliente actual</h2>
-        <div id="currentBox" class="muted">No hay cliente en curso.</div>
-      </div>
+    <div class="center">
+      <button class="mainBtn" id="mainBtn" aria-label="Iniciar o finalizar">
+        <div class="ring" id="ring" style="--p: 0deg; --ringFill: var(--blue);"></div>
+        <div class="core" id="core">
+          <div class="actionText" id="actionText">INICIAR</div>
+          <div class="countdown" id="countdown">—</div>
+          <div class="subText" id="subText">Tocá para arrancar el corte.</div>
+        </div>
+      </button>
+    </div>
 
-      <div class="card">
-        <h2>Cola</h2>
-        <div class="list" id="queue"></div>
-        <div class="toast" id="queueHint"></div>
+    <div class="bottomRow">
+      <button class="waitBtn" id="waitBtn">ESPERA</button>
+
+      <div style="flex:1; text-align:right;">
+        <div class="queueIcons" id="queueIcons"></div>
+        <div class="qText" id="qText">0 en espera</div>
       </div>
     </div>
 
-    <div class="row">
-      <div class="card">
-        <h2>Historial del día</h2>
-        <div class="list" id="history"></div>
-        <div class="right" style="margin-top:10px;">
-          <button class="btnBase btnSmall btnPrimary" id="copyHistory">Copiar</button>
-          <button class="btnBase btnSmall btnDanger" id="clearHistory">Borrar</button>
-        </div>
-        <div class="toast">Para comparar con tu cuaderno: nombre + hora + duración + servicio.</div>
-      </div>
-
-      <div class="card">
-        <h2>Config</h2>
-        <div class="grid2">
-          <div>
-            <div class="muted">Cierre objetivo</div>
-            <input type="time" id="shiftEnd" value="22:00" />
-          </div>
-          <div>
-            <div class="muted">Límite duro (min)</div>
-            <input type="number" id="hardOver" min="0" max="60" value="10" />
-          </div>
-          <div>
-            <div class="muted">Margen (min)</div>
-            <input type="number" id="buffer" min="0" max="60" value="12" />
-          </div>
-          <div>
-            <div class="muted">Pre-alerta color (min)</div>
-            <input type="number" id="colorLead" min="1" max="30" value="8" />
-          </div>
-        </div>
-
-        <div class="divider"></div>
-        <div class="right">
-          <button class="btnBase btnSmall btnWarn" id="resetData">Reset aprendizaje</button>
-          <button class="btnBase btnSmall btnWarn" id="clearDay">Limpiar día</button>
-        </div>
-
-        <div class="divider"></div>
-        <h2>Aprendizaje</h2>
-        <div class="muted" id="stats"></div>
-      </div>
+    <div class="miniRow">
+      <button class="miniBtn miniBtnRed" id="undoBtn">DESHACER</button>
+      <button class="miniBtn miniBtnBlue" id="logBtn">REGISTRO</button>
     </div>
   </div>
 
-  <dialog id="addDialog">
+  <!-- Sugerencias de nombres -->
+  <datalist id="nameSuggestions"></datalist>
+
+  <!-- Modal: iniciar -->
+  <dialog id="startDlg">
     <form method="dialog" class="sheet">
-      <h2>Nuevo cliente</h2>
-      <div class="muted" style="margin-bottom:8px;">Escribí el nombre (con sugerencias).</div>
-      <input type="text" id="clientName" list="nameSuggestions" placeholder="Ej: Juan" autocomplete="off" />
-      <div class="divider"></div>
-      <div class="right">
-        <button class="btnBase btnSmall" value="cancel">Cancelar</button>
-        <button class="btnBase btnSmall btnPrimary" value="ok">Agregar</button>
+      <h3>Iniciar corte</h3>
+      <div class="muted">Nombre opcional. Servicio opcional (podés confirmar al final).</div>
+
+      <input id="startName" type="text" list="nameSuggestions" placeholder="Ej: Juan" autocomplete="off">
+
+      <select id="startService" style="margin-top:10px;">
+        <option value="auto">Servicio: lo confirmo al final</option>
+        <option value="cut">Corte</option>
+        <option value="cutbeard">Corte + Barba</option>
+      </select>
+
+      <div class="row">
+        <button class="btn" value="cancel">Cancelar</button>
+        <button class="btn btnBlue" value="ok">Arrancar</button>
       </div>
     </form>
   </dialog>
 
-  <dialog id="finishDialog">
+  <!-- Modal: finalizar -->
+  <dialog id="finishDlg">
     <form method="dialog" class="sheet">
-      <h2>¿Qué hiciste?</h2>
-      <div class="muted" id="finishInfo" style="margin-bottom:10px;"></div>
+      <h3>Finalizar</h3>
+      <div class="muted" id="finishInfo">—</div>
 
-      <div class="grid2">
-        <label><input type="checkbox" id="didBeard" /> Barba (navaja)</label>
-        <label><input type="checkbox" id="didWash" /> Lavado</label>
-        <label><input type="checkbox" id="didBrows" /> Cejas (+3)</label>
-        <label><input type="checkbox" id="didDesign" /> Diseño (+3)</label>
-      </div>
+      <select id="finishService" style="margin-top:10px;">
+        <option value="cut">Corte</option>
+        <option value="cutbeard">Corte + Barba</option>
+      </select>
 
-      <div class="divider"></div>
-      <div class="right">
-        <button class="btnBase btnSmall" value="cancel">Cancelar</button>
-        <button class="btnBase btnSmall btnPrimary" value="ok">Confirmar</button>
+      <div class="row">
+        <button class="btn" value="cancel">Cancelar</button>
+        <button class="btn btnRed" value="ok">Guardar</button>
       </div>
     </form>
   </dialog>
 
-  <dialog id="colorClientDialog">
+  <!-- Modal: espera -->
+  <dialog id="waitDlg">
     <form method="dialog" class="sheet">
-      <h2>¿Quién es el color?</h2>
-      <div class="muted" style="margin-bottom:10px;">Elegí un cliente (actual o cola). El color queda en paralelo.</div>
-      <select id="colorClientSelect"></select>
-      <div class="divider"></div>
-      <div class="right">
-        <button class="btnBase btnSmall" value="cancel">Cancelar</button>
-        <button class="btnBase btnSmall btnViolet" value="ok">Asignar</button>
+      <h3>Espera</h3>
+      <div class="muted" id="waitInfo">—</div>
+      <div class="hintLine" id="waitHint">—</div>
+
+      <input id="waitName" type="text" list="nameSuggestions" placeholder="Nombre (si se queda) - opcional" autocomplete="off">
+
+      <div class="row">
+        <button class="btn" value="cancel">No se queda</button>
+        <button class="btn btnBlue" value="ok">Agregar a cola</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Modal: registro -->
+  <dialog id="logDlg">
+    <form method="dialog" class="sheet">
+      <h3>Registro del día</h3>
+      <div class="muted" id="logSummary">—</div>
+
+      <div class="logList" id="logList"></div>
+
+      <div class="row">
+        <button class="btn" value="cancel">Cerrar</button>
+        <button class="btn btnBlue" id="copyBtn" value="noop">Copiar</button>
+        <button class="btn btnRed" id="clearBtn" value="noop">Borrar</button>
       </div>
     </form>
   </dialog>
 
 <script>
-/* --------- Pulse effect helper --------- */
-function pulse(btn){
-  if(!btn) return;
-  const s=document.createElement('span');
-  s.className='pulse';
-  btn.appendChild(s);
-  setTimeout(()=>{ try{btn.removeChild(s);}catch{} }, 500);
-}
-
-/* ===== Tiempo ===== */
-function pad(n){ return String(n).padStart(2,'0'); }
-function toMin(hhmm){ const [h,m]=hhmm.split(':').map(Number); return h*60+m; }
-function fromMin(min){ min=((min%1440)+1440)%1440; const h=Math.floor(min/60), m=min%60; return pad(h)+':'+pad(m); }
-function nowMin(){ const d=new Date(); return d.getHours()*60+d.getMinutes(); }
+/* ===== Helpers tiempo ===== */
+const pad = n => String(n).padStart(2,'0');
+const nowMin = () => { const d=new Date(); return d.getHours()*60+d.getMinutes(); }
+const fromMin = (m) => { m=((m%1440)+1440)%1440; return pad(Math.floor(m/60))+':'+pad(m%60); }
+const toMin = (hhmm) => { const [h,m]=hhmm.split(':').map(Number); return h*60+m; }
 
 /* ===== Storage ===== */
-const LS_KEY='barber_turnos_pwa_v3_neon';
-function load(){ try{return JSON.parse(localStorage.getItem(LS_KEY))||null;}catch{return null;} }
-function save(s){ localStorage.setItem(LS_KEY, JSON.stringify(s)); }
-
-/* ===== Learning (EMA) ===== */
-function ema(prev, val, a){ if(prev==null) return val; return prev*(1-a)+val*a; }
+const LS='turnos_minimal_v2';
+const load=()=>{ try{return JSON.parse(localStorage.getItem(LS))||null}catch{return null} };
+const save=(s)=>localStorage.setItem(LS, JSON.stringify(s));
 
 /* ===== Estado ===== */
 const defaultState={
-  config:{ shiftEnd:'22:00', hardOver:10, buffer:12, colorLead:8 },
+  cfg:{ shiftEnd:'22:00', hardOver:10, buffer:12 },
   seq:1,
-  current:null,
-  queue:[],
-  paused:null,
-  color:null, // { clientId, clientName, stage:'idle'|'waiting'|'due', dueMin, alertMin, alerted, reservedFinalCut:true }
-  history:[],
+  current:null,      // { id, name, startedAtMin, activeMin, lastResumeMin, serviceHint }
+  queue:[],          // [{ id, name, serviceHint }]
   knownNames:[],
-  learn:{
-    baseCut:{ avg:38, n:0 },
-    addBeard:{ avg:27, n:0 },
-    addWash:{ avg:7, n:0 },
-    addBrow:{ avg:3, n:0 },
-    addDesign:{ avg:3, n:0 }
-  }
+  log:[],            // historial del día
+  learning:{ cutAvg:38, beardExtra:18 }
 };
 let state=load()||structuredClone(defaultState);
 
-/* ===== UI ===== */
+/* ===== UI refs ===== */
 const elNow=document.getElementById('now');
 const elEta=document.getElementById('eta');
 const elEtaExplain=document.getElementById('etaExplain');
-const elDot=document.getElementById('statusDot');
-const elStatus=document.getElementById('statusText');
+const elStatusText=document.getElementById('statusText');
+const elDot=document.getElementById('dot');
+const elStatusLine=document.getElementById('statusLine');
 
-const elQueue=document.getElementById('queue');
-const elQueueHint=document.getElementById('queueHint');
-const elCurrentBox=document.getElementById('currentBox');
-const elHistory=document.getElementById('history');
+const mainBtn=document.getElementById('mainBtn');
+const actionText=document.getElementById('actionText');
+const countdown=document.getElementById('countdown');
+const subText=document.getElementById('subText');
+const ring=document.getElementById('ring');
+
+const waitBtn=document.getElementById('waitBtn');
+const queueIcons=document.getElementById('queueIcons');
+const qText=document.getElementById('qText');
+
+const undoBtn=document.getElementById('undoBtn');
+const logBtn=document.getElementById('logBtn');
 
 const nameSuggestions=document.getElementById('nameSuggestions');
 
-const shiftEnd=document.getElementById('shiftEnd');
-const hardOver=document.getElementById('hardOver');
-const buffer=document.getElementById('buffer');
-const colorLead=document.getElementById('colorLead');
+const startDlg=document.getElementById('startDlg');
+const startName=document.getElementById('startName');
+const startService=document.getElementById('startService');
 
-const addClientBtn=document.getElementById('addClient');
-const finishClientBtn=document.getElementById('finishClient');
-const resetDataBtn=document.getElementById('resetData');
-const clearDayBtn=document.getElementById('clearDay');
-
-const setColorClientBtn=document.getElementById('setColorClient');
-const colorWait40Btn=document.getElementById('colorWait40');
-const colorWait45Btn=document.getElementById('colorWait45');
-const attendColorBtn=document.getElementById('attendColor');
-const resumeClientBtn=document.getElementById('resumeClient');
-
-const colorBanner=document.getElementById('colorBanner');
-const colorTitle=document.getElementById('colorTitle');
-const colorBody=document.getElementById('colorBody');
-
-const adviceBanner=document.getElementById('adviceBanner');
-const adviceTitle=document.getElementById('adviceTitle');
-const adviceBody=document.getElementById('adviceBody');
-
-const addDialog=document.getElementById('addDialog');
-const clientNameInput=document.getElementById('clientName');
-
-const finishDialog=document.getElementById('finishDialog');
+const finishDlg=document.getElementById('finishDlg');
 const finishInfo=document.getElementById('finishInfo');
-const didBeard=document.getElementById('didBeard');
-const didWash=document.getElementById('didWash');
-const didBrows=document.getElementById('didBrows');
-const didDesign=document.getElementById('didDesign');
+const finishService=document.getElementById('finishService');
 
-const colorClientDialog=document.getElementById('colorClientDialog');
-const colorClientSelect=document.getElementById('colorClientSelect');
+const waitDlg=document.getElementById('waitDlg');
+const waitInfo=document.getElementById('waitInfo');
+const waitHint=document.getElementById('waitHint');
+const waitName=document.getElementById('waitName');
 
-const copyHistoryBtn=document.getElementById('copyHistory');
-const clearHistoryBtn=document.getElementById('clearHistory');
+const logDlg=document.getElementById('logDlg');
+const logSummary=document.getElementById('logSummary');
+const logList=document.getElementById('logList');
+const copyBtn=document.getElementById('copyBtn');
+const clearBtn=document.getElementById('clearBtn');
 
-/* ===== Utilidades ===== */
 function vibrate(ms){ try{ if(navigator.vibrate) navigator.vibrate(ms);}catch{} }
 
-function setBanner(el, show, title, body){
-  el.style.display = show ? 'block' : 'none';
-  if(show){
-    if(el===colorBanner){ colorTitle.textContent=title; colorBody.textContent=body; }
-    if(el===adviceBanner){ adviceTitle.textContent=title; adviceBody.textContent=body; }
-  }
-}
-
+/* ===== Nombres sugeridos ===== */
 function buildNameSuggestions(){
-  const base = [
-    'Juan','Juana','Julián','Julieta','Jorge','José','Jonatan','Joaquín','Javier',
-    'Martín','Matías','Mateo','Marcos','Máximo','Mauro','Miguel',
+  const base=[
+    'Juan','Julián','Joaquín','José','Jorge','Javier',
+    'Martín','Matías','Mateo','Marcos','Miguel',
     'Franco','Federico','Facundo','Fernando',
-    'Nicolás','Nahuel','Néstor',
-    'Lucas','Luciano','Leandro','Leonel',
-    'Agustín','Alejandro','Andrés','Alan',
-    'Santiago','Santino','Sebastián','Sergio',
-    'Tomás','Thiago','Tobías',
-    'Diego','Damián',
-    'Pablo','Pedro',
-    'Gonzalo','Guido','Germán',
-    'Kevin','Brian'
+    'Nicolás','Nahuel','Lucas','Leandro',
+    'Agustín','Santiago','Sebastián','Tomás','Thiago',
+    'Diego','Pablo','Pedro','Gonzalo','Kevin','Brian'
   ];
-  const all = Array.from(new Set([ ...base, ...(state.knownNames||[]) ])).sort((a,b)=>a.localeCompare(b));
-  nameSuggestions.innerHTML = all.map(n => `<option value="${n}"></option>`).join('');
+  const all = Array.from(new Set([...base, ...(state.knownNames||[])])).sort((a,b)=>a.localeCompare(b));
+  nameSuggestions.innerHTML = all.map(n=>`<option value="${n}"></option>`).join('');
 }
 
-function estMinutes(opts){
-  const L=state.learn;
-  let t=L.baseCut.avg;
-  if(opts?.beard) t+=L.addBeard.avg;
-  if(opts?.wash) t+=L.addWash.avg;
-  if(opts?.brows) t+=L.addBrow.avg;
-  if(opts?.design) t+=L.addDesign.avg;
-  return Math.round(t);
+/* ===== Estimaciones ===== */
+function estFor(service){
+  const base = state.learning.cutAvg;
+  if(service==='cutbeard') return Math.round(base + state.learning.beardExtra);
+  return Math.round(base);
 }
-
-function getCurrentActiveMin(){
+function currentActiveMin(){
   if(!state.current) return 0;
-  const nowM = nowMin();
-  const running = state.current.lastResumeMin != null;
-  return state.current.activeMin + (running ? Math.max(0, nowM - state.current.lastResumeMin) : 0);
+  const now=nowMin();
+  return state.current.activeMin + Math.max(0, now - (state.current.lastResumeMin ?? now));
+}
+function currentRemainingMin(){
+  if(!state.current) return 0;
+  const est = estFor(state.current.serviceHint || 'auto');
+  return Math.max(1, est - currentActiveMin());
 }
 
-function startClient(client){
-  const nowM = nowMin();
-  state.current = {
-    id: client.id,
-    name: client.name || '',
-    startedAtMin: nowM,
-    activeMin: 0,
-    lastResumeMin: nowM
-  };
-}
-
-function startNextIfPossible(){
-  if(state.current) return;
-  if(state.paused) return;
-  if(!state.queue.length) return;
-  const next = state.queue.shift();
-  startClient(next);
-}
-
-function pauseCurrent(reason){
-  if(!state.current) return;
-  state.current.activeMin = getCurrentActiveMin();
-  state.current.lastResumeMin = null;
-  state.paused = { ...state.current, pausedReason: reason, pausedAtMin: nowMin() };
-}
-
-function resumeCurrent(){
-  if(!state.paused) return;
-  state.current = { ...state.paused, lastResumeMin: nowMin() };
-  state.paused = null;
-}
-
-/* ===== Color paralelo ===== */
-function updateColorTimers(){
-  if(!state.color) return;
-  const nowM = nowMin();
-
-  if(state.color.stage==='waiting'){
-    if(!state.color.alerted && nowM >= state.color.alertMin){
-      state.color.alerted = true;
-      vibrate(200);
-    }
-    if(nowM >= state.color.dueMin){
-      state.color.stage = 'due';
-      vibrate(400);
-    }
-  }
-}
-
-function colorSafeWindowMin(){
-  if(!state.color || state.color.stage!=='waiting') return null;
-  return state.color.alertMin;
-}
-
-function reserveFinalColorCutMinutes(){
-  if(!state.color) return 0;
-  if(!state.color.reservedFinalCut) return 0;
-  return Math.round(state.learn.baseCut.avg + Number(state.config.buffer));
-}
-
-/* ===== ETA ===== */
+/* ===== ETA (salida estimada) ===== */
 function etaFinishMin(){
-  const nowM = nowMin();
-  let t = nowM;
-
-  if(state.current){
-    const active = getCurrentActiveMin();
-    const remaining = Math.max(1, Math.round(state.learn.baseCut.avg - active));
-    t += remaining;
-  }
+  const now = nowMin();
+  let t = now;
+  if(state.current) t += currentRemainingMin();
   for(const c of state.queue){
-    t += Math.round(state.learn.baseCut.avg);
-  }
-  t += reserveFinalColorCutMinutes();
-
-  if(state.color && (state.color.stage==='waiting' || state.color.stage==='due')){
-    const due = state.color.dueMin;
-    if(due != null && due < t){
-      t += 10; // bloque típico de “acción color”
-    }
+    t += estFor(c.serviceHint || 'auto');
   }
   return t;
 }
+function statusFor(eta){
+  const end=toMin(state.cfg.shiftEnd);
+  const hard=end + state.cfg.hardOver;
+  const buf=state.cfg.buffer;
+  const etaBuf=eta + buf;
 
-function statusFor(etaMin){
-  const end=toMin(state.config.shiftEnd);
-  const hard=end + Number(state.config.hardOver);
-  const buf=Number(state.config.buffer);
-  const etaBuf=etaMin + buf;
-
-  if(etaBuf<=end) return { label:'VERDE', color:'#5cf56f', explain:`Con margen (+${buf}): ${fromMin(etaBuf)} (ok)` };
-  if(etaBuf<=hard) return { label:'AMARILLO', color:'#ffd34d', explain:`Con margen (+${buf}): ${fromMin(etaBuf)} (te pasás un poco)` };
-  return { label:'ROJO', color:'#ff4e6a', explain:`Con margen (+${buf}): ${fromMin(etaBuf)} (no aceptar)` };
+  if(etaBuf<=end) return {label:'VERDE', color:'var(--green)', explain:`Con margen (+${buf}) terminás ${fromMin(etaBuf)}.`};
+  if(etaBuf<=hard) return {label:'AMARILLO', color:'var(--amber)', explain:`Te pasás un poco. Con margen: ${fromMin(etaBuf)}.`};
+  return {label:'ROJO', color:'var(--red)', explain:`No entra más. Con margen: ${fromMin(etaBuf)}.`};
 }
 
-function acceptanceAdvice(){
-  const nowM = nowMin();
-  const buf = Number(state.config.buffer);
-  const cutSafe = Math.round(state.learn.baseCut.avg + buf);
-
-  const safeUntil = colorSafeWindowMin();
-  if(safeUntil != null){
-    const free = safeUntil - nowM;
-    if(free <= 0) return { show:true, text:`Hay color por atender pronto. No conviene arrancar un corte ahora.` };
-    if(free < cutSafe) return { show:true, text:`Ventana segura antes del color: ${free} min. NO entra un corte seguro (solo retoques).` };
-    return { show:true, text:`Ventana segura antes del color: ${free} min. Entra 1 corte rápido si arrancás ya y evitás lavado.` };
+/* ===== Cola iconos ===== */
+function personSvg(){
+  return `
+  <svg class="person" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="M12 12.2c2.4 0 4.3-2 4.3-4.4S14.4 3.4 12 3.4 7.7 5.4 7.7 7.8 9.6 12.2 12 12.2Z"
+      stroke="rgba(78,166,255,.95)" stroke-width="1.6"/>
+    <path d="M4.6 20.6c.9-4 4-6.2 7.4-6.2s6.5 2.2 7.4 6.2"
+      stroke="rgba(78,166,255,.95)" stroke-width="1.6" stroke-linecap="round"/>
+  </svg>`;
+}
+function renderQueue(){
+  const n = state.queue.length;
+  queueIcons.innerHTML = '';
+  for(let i=0;i<Math.min(n,12);i++){
+    const wrap=document.createElement('div');
+    wrap.innerHTML = personSvg();
+    queueIcons.appendChild(wrap.firstElementChild);
   }
-
-  const eta = etaFinishMin();
-  const st = statusFor(eta);
-  if(st.label==='ROJO') return { show:true, text:`No conviene aceptar más. ${st.explain}` };
-  if(st.label==='AMARILLO') return { show:true, text:`Estás justo. ${st.explain}` };
-  return { show:true, text:`Podés aceptar. ${st.explain}` };
+  qText.textContent = `${n} en espera`;
 }
 
-/* ===== Render ===== */
+/* ===== Ring progreso ===== */
+function setRingProgress(pct, running){
+  const deg = Math.max(0, Math.min(1, pct)) * 360;
+  ring.style.setProperty('--p', `${deg}deg`);
+  ring.style.setProperty('--ringFill', running ? 'var(--red)' : 'var(--blue)');
+}
+
+/* ===== Registro ===== */
+function renderLog(){
+  const items = state.log || [];
+  const total = items.length;
+  const totalMin = items.reduce((a,x)=>a+(x.durationMin||0),0);
+  logSummary.textContent = `${total} clientes · ${totalMin} min activos`;
+
+  logList.innerHTML = '';
+  if(!items.length){
+    logList.innerHTML = `<div class="logItem"><div class="muted">Aún no hay registros.</div></div>`;
+    return;
+  }
+  for(const h of items.slice().reverse()){
+    const name = h.name || '(sin nombre)';
+    const svc = (h.service==='cutbeard') ? 'Corte + Barba' : 'Corte';
+    const line = `${fromMin(h.startMin)}-${fromMin(h.endMin)} · ${h.durationMin}m · ${svc}`;
+    const div=document.createElement('div');
+    div.className='logItem';
+    div.innerHTML = `<strong>${name}</strong><div class="muted">${line}</div>`;
+    logList.appendChild(div);
+  }
+}
+function logToText(){
+  const items = state.log || [];
+  return items.map(h=>{
+    const name = h.name || '(sin nombre)';
+    const svc = (h.service==='cutbeard') ? 'corte+barba' : 'corte';
+    return `${fromMin(h.startMin)}-${fromMin(h.endMin)} | ${name} | ${svc} | ${h.durationMin}min`;
+  }).join('\n');
+}
+
+/* ===== Render principal ===== */
 function render(){
-  updateColorTimers();
   buildNameSuggestions();
 
-  shiftEnd.value = state.config.shiftEnd;
-  hardOver.value = state.config.hardOver;
-  buffer.value = state.config.buffer;
-  colorLead.value = state.config.colorLead;
+  const now=nowMin();
+  elNow.textContent = fromMin(now);
 
-  const nowM = nowMin();
-  elNow.textContent = fromMin(nowM);
+  renderQueue();
 
-  // Cliente actual
-  if(!state.current){
-    elCurrentBox.textContent = state.paused
-      ? `Cliente pausado: #${state.paused.id} ${state.paused.name||''}`
-      : 'No hay cliente en curso.';
-  } else {
-    const active = getCurrentActiveMin();
-    const rem = Math.max(1, Math.round(state.learn.baseCut.avg - active));
-    const estEnd = nowM + rem;
-    elCurrentBox.innerHTML = `
-      <div><strong>#${state.current.id} ${state.current.name||''}</strong></div>
-      <div class="muted">Inicio: ${fromMin(state.current.startedAtMin)} · Tiempo activo: ${active} min</div>
-      <div class="muted">Restante estimado: ${rem} min · Fin aprox: ${fromMin(estEnd)}</div>
-    `;
-  }
-
-  // Cola
-  elQueue.innerHTML='';
-  elQueueHint.textContent = state.queue.length ? '' : 'Cola vacía.';
-  state.queue.forEach((c, idx) => {
-    const div=document.createElement('div');
-    div.className='item';
-    div.innerHTML=`
-      <div>
-        <strong>#${c.id} ${c.name||''}</strong>
-        <div class="muted">Estimado: Corte base</div>
-      </div>
-      <div class="meta">
-        <div class="muted">${Math.round(state.learn.baseCut.avg)} min</div>
-        <button class="btnBase btnSmall" data-remove="${idx}">Quitar</button>
-      </div>`;
-    elQueue.appendChild(div);
-  });
-
-  // Historial
-  elHistory.innerHTML = '';
-  if(!state.history.length){
-    elHistory.innerHTML = `<div class="muted">Aún no hay registros.</div>`;
-  } else {
-    for(const h of state.history.slice().reverse()){
-      const extras = [
-        h.beard?'barba':'',
-        h.wash?'lavado':'',
-        h.brows?'cejas':'',
-        h.design?'diseño':''
-      ].filter(Boolean).join(' + ') || 'corte';
-
-      const div=document.createElement('div');
-      div.className='item';
-      div.innerHTML = `
-        <div>
-          <strong>${h.name||'(sin nombre)'} · #${h.id}</strong>
-          <div class="muted">${fromMin(h.startMin)} → ${fromMin(h.endMin)} · ${h.durationMin} min · ${extras}</div>
-        </div>
-        <div class="meta">
-          <div class="muted">${h.durationMin} min</div>
-        </div>
-      `;
-      elHistory.appendChild(div);
-    }
-  }
-
-  // ETA + semáforo
-  const eta = etaFinishMin();
+  const eta=etaFinishMin();
   elEta.textContent = fromMin(eta);
-  const st = statusFor(eta);
-  elStatus.textContent = st.label;
-  elDot.style.background = st.color;
-  elDot.style.boxShadow = `0 0 18px ${st.color}66`;
-  elEtaExplain.textContent = st.explain + (state.color?.reservedFinalCut ? ' · Reserva corte final color' : '');
+  const st=statusFor(eta);
 
-  // Color banner
-  if(!state.color){
-    setBanner(colorBanner,false);
+  elStatusText.textContent = st.label;
+  elDot.style.background = st.color;
+  elDot.style.boxShadow = `0 0 18px ${st.color}`;
+  elEtaExplain.textContent = st.explain;
+
+  if(!state.current){
+    actionText.textContent = 'INICIAR';
+    countdown.textContent = '—';
+    subText.textContent = state.queue.length
+      ? `Hay ${state.queue.length} en espera. Tocá INICIAR para el próximo.`
+      : 'Tocá para arrancar el corte.';
+    setRingProgress(0, false);
+    elStatusLine.textContent = (st.label==='ROJO')
+      ? 'Estás al límite: si agregás, te pasás.'
+      : 'Listo.';
   } else {
-    if(state.color.stage==='idle'){
-      setBanner(colorBanner,true, `Color · ${state.color.clientName||''}`, 'Asignado. Cuando empiece la espera, tocá “Esperar 40/45”.');
-    }
-    if(state.color.stage==='waiting'){
-      const remDue = state.color.dueMin - nowM;
-      const remAlert = state.color.alertMin - nowM;
-      setBanner(colorBanner,true, `Color · ${state.color.clientName||''}`,
-        `Espera · Lavar/revisar a las ${fromMin(state.color.dueMin)} (faltan ${Math.max(0,remDue)} min). ` +
-        `Pre-alerta ${Math.max(0,remAlert)} min.`
-      );
-      if(state.color.alerted){
-        elStatus.textContent='AMARILLO';
-        elDot.style.background='#FFD45A';
-        elDot.style.boxShadow='0 0 18px rgba(255,212,90,.55)';
-      }
-    }
-    if(state.color.stage==='due'){
-      setBanner(colorBanner,true, `Color · ${state.color.clientName||''}`,
-        `YA toca atender el color (debía ser a las ${fromMin(state.color.dueMin)}).`
-      );
-      elStatus.textContent='ROJO';
-      elDot.style.background='#FF4E6A';
-      elDot.style.boxShadow='0 0 18px rgba(255,78,106,.55)';
-    }
+    actionText.textContent = 'FINALIZAR';
+    const rem=currentRemainingMin();
+    countdown.textContent = `${rem}m`;
+    subText.textContent = `Te quedan ~${rem} min. Tocá ESPERA si llega alguien.`;
+    const est = estFor(state.current.serviceHint||'auto');
+    const done = currentActiveMin();
+    setRingProgress(done / Math.max(1, est), true);
+    elStatusLine.textContent = `En curso · Inicio ${fromMin(state.current.startedAtMin)} · Activo ${done}m`;
   }
 
-  // Advice banner
-  const adv = acceptanceAdvice();
-  setBanner(adviceBanner, adv.show, 'Aceptación', adv.text);
-
-  // Stats
-  const L=state.learn;
-  document.getElementById('stats').innerHTML = `
-    <div class="muted">Base corte: <strong>${Math.round(L.baseCut.avg)} min</strong> (n=${L.baseCut.n})</div>
-    <div class="muted">Extra barba: <strong>+${Math.round(L.addBeard.avg)} min</strong> (n=${L.addBeard.n})</div>
-    <div class="muted">Extra lavado: <strong>+${Math.round(L.addWash.avg)} min</strong> (n=${L.addWash.n})</div>
-    <div class="muted">Extra cejas: <strong>+${Math.round(L.addBrow.avg)} min</strong> (n=${L.addBrow.n})</div>
-    <div class="muted">Extra diseño: <strong>+${Math.round(L.addDesign.avg)} min</strong> (n=${L.addDesign.n})</div>
-  `;
+  // habilitar/deshabilitar deshacer
+  undoBtn.disabled = state.queue.length===0;
+  undoBtn.style.opacity = undoBtn.disabled ? 0.45 : 1;
 
   save(state);
 }
 
-/* ===== Handlers ===== */
-function bindPulse(){
-  const all=document.querySelectorAll('button');
-  all.forEach(b=>{
-    b.addEventListener('click', ()=>pulse(b), { passive:true });
-  });
-}
-
-/* Quitar de cola */
-elQueue.addEventListener('click', (e) => {
-  const btn=e.target.closest('button[data-remove]');
-  if(!btn) return;
-  const idx=Number(btn.dataset.remove);
-  state.queue.splice(idx, 1);
-  render();
+/* ===== Acciones ===== */
+mainBtn.addEventListener('click', () => {
+  if(!state.current){
+    // Iniciar: propone el primero de cola como default
+    startName.value = '';
+    startService.value = 'auto';
+    if(state.queue.length){
+      const next = state.queue[0];
+      startName.value = next.name || '';
+      startService.value = next.serviceHint || 'auto';
+    }
+    startDlg.showModal();
+  } else {
+    const active = currentActiveMin();
+    finishInfo.textContent = `${state.current.name ? state.current.name + ' · ' : ''}Tiempo activo: ${active} min`;
+    finishService.value = state.current.serviceHint==='cutbeard' ? 'cutbeard' : 'cut';
+    finishDlg.showModal();
+  }
 });
 
-/* Agregar cliente */
-addClientBtn.addEventListener('click', () => {
-  clientNameInput.value = '';
-  addDialog.showModal();
-});
+startDlg.addEventListener('close', () => {
+  if(startDlg.returnValue!=='ok') return;
 
-addDialog.addEventListener('close', () => {
-  if(addDialog.returnValue!=='ok') return;
-  const name = (clientNameInput.value || '').trim();
-  const id = state.seq++;
+  let picked = null;
+  if(state.queue.length) picked = state.queue.shift();
+
+  const name = (startName.value||'').trim() || (picked?.name||'');
+  const service = startService.value || (picked?.serviceHint||'auto');
 
   if(name){
     state.knownNames = Array.from(new Set([...(state.knownNames||[]), name]));
   }
 
-  const newClient = { id, name };
+  const id = picked?.id ?? state.seq++;
+  const now=nowMin();
+  state.current = {
+    id,
+    name,
+    startedAtMin: now,
+    activeMin: 0,
+    lastResumeMin: now,
+    serviceHint: service
+  };
 
-  if(!state.current && !state.paused){
-    startClient(newClient);
-  } else {
-    state.queue.push(newClient);
-  }
   render();
 });
 
-/* Finalizar */
-finishClientBtn.addEventListener('click', () => {
+finishDlg.addEventListener('close', () => {
+  if(finishDlg.returnValue!=='ok') return;
   if(!state.current) return;
-  didBeard.checked=false; didWash.checked=false; didBrows.checked=false; didDesign.checked=false;
-  const active = getCurrentActiveMin();
-  finishInfo.textContent = `#${state.current.id} ${state.current.name||''} · Tiempo activo real: ${active} min`;
-  finishDialog.showModal();
-});
 
-finishDialog.addEventListener('close', () => {
-  if(finishDialog.returnValue!=='ok') return;
+  const done = Math.max(1, currentActiveMin());
+  const service = finishService.value;
 
-  const opts={ beard:didBeard.checked, wash:didWash.checked, brows:didBrows.checked, design:didDesign.checked };
-  const L=state.learn;
-
-  const elapsed = Math.max(1, getCurrentActiveMin());
-  const alphaBase=0.20, alphaExtra=0.25;
-
-  const extrasSum =
-    (opts.beard ? L.addBeard.avg : 0) +
-    (opts.wash ? L.addWash.avg : 0) +
-    (opts.brows ? L.addBrow.avg : 0) +
-    (opts.design ? L.addDesign.avg : 0);
-
-  const baseObserved=Math.max(10, elapsed - extrasSum);
-  L.baseCut.avg=ema(L.baseCut.avg, baseObserved, alphaBase); L.baseCut.n+=1;
-
-  function updateExtra(key, isOn){
-    if(!isOn) return;
-    const other =
-      (key!=='addBeard' && opts.beard ? L.addBeard.avg : 0) +
-      (key!=='addWash'  && opts.wash  ? L.addWash.avg  : 0) +
-      (key!=='addBrow'  && opts.brows ? L.addBrow.avg  : 0) +
-      (key!=='addDesign'&& opts.design? L.addDesign.avg: 0);
-    const extraObserved=Math.max(1, elapsed - baseObserved - other);
-    L[key].avg=ema(L[key].avg, extraObserved, alphaExtra); L[key].n+=1;
+  // Aprendizaje simple (EMA)
+  const a = 0.22;
+  const estBase = state.learning.cutAvg;
+  if(service==='cutbeard'){
+    const baseObs = Math.max(10, done - state.learning.beardExtra);
+    state.learning.cutAvg = estBase*(1-a) + baseObs*a;
+    const extraObs = Math.max(5, done - state.learning.cutAvg);
+    state.learning.beardExtra = state.learning.beardExtra*(1-a) + extraObs*a;
+  } else {
+    state.learning.cutAvg = estBase*(1-a) + done*a;
   }
-  updateExtra('addBeard', opts.beard);
-  updateExtra('addWash', opts.wash);
-  updateExtra('addBrow', opts.brows);
-  updateExtra('addDesign', opts.design);
 
+  // Registro
   const startMin = state.current.startedAtMin;
   const endMin = nowMin();
-
-  state.history.push({
+  state.log.push({
     id: state.current.id,
-    name: state.current.name||'',
-    startMin, endMin,
-    durationMin: elapsed,
-    ...opts
+    name: state.current.name || '',
+    service,
+    startMin,
+    endMin,
+    durationMin: done
   });
 
+  // cerrar
   state.current = null;
-  startNextIfPossible();
-
   render();
 });
 
-/* Config */
-function bindConfig(){
-  state.config.shiftEnd=shiftEnd.value;
-  state.config.hardOver=Number(hardOver.value);
-  state.config.buffer=Number(buffer.value);
-  state.config.colorLead=Number(colorLead.value);
-  render();
-}
-shiftEnd.addEventListener('change', bindConfig);
-hardOver.addEventListener('change', bindConfig);
-buffer.addEventListener('change', bindConfig);
-colorLead.addEventListener('change', bindConfig);
-
-resetDataBtn.addEventListener('click', () => { state.learn=structuredClone(defaultState.learn); render(); });
-clearDayBtn.addEventListener('click', () => { state.current=null; state.paused=null; state.queue=[]; state.color=null; render(); });
-
-copyHistoryBtn.addEventListener('click', async () => {
-  const lines = state.history.map(h => {
-    const extras = [
-      h.beard?'barba':'',
-      h.wash?'lavado':'',
-      h.brows?'cejas':'',
-      h.design?'diseño':''
-    ].filter(Boolean).join(' + ') || 'corte';
-    return `${fromMin(h.startMin)}-${fromMin(h.endMin)} | ${h.name||'(sin nombre)'} | ${extras} | ${h.durationMin}min`;
-  }).join('\n');
-  try{ await navigator.clipboard.writeText(lines || ''); vibrate(120); }catch{}
-});
-clearHistoryBtn.addEventListener('click', () => { state.history=[]; render(); });
-
-/* Color: asignar cliente X */
-setColorClientBtn.addEventListener('click', () => {
-  const options = [];
-  if(state.current) options.push({ key:`cur:${state.current.id}`, id: state.current.id, name: state.current.name||'(sin nombre)' });
-  for(const c of state.queue) options.push({ key:`q:${c.id}`, id: c.id, name: c.name||'(sin nombre)' });
-  if(!options.length) return;
-
-  colorClientSelect.innerHTML = options.map(o => `<option value="${o.key}">#${o.id} ${o.name}</option>`).join('');
-  colorClientDialog.showModal();
+waitBtn.addEventListener('click', () => {
+  if(!state.current){
+    waitInfo.textContent = 'No hay corte activo. Si querés, podés agregar alguien a la cola.';
+    waitHint.textContent = `Si lo agregás, después tocás INICIAR cuando quieras.`;
+  } else {
+    const rem = currentRemainingMin();
+    const eta = etaFinishMin();
+    const st = statusFor(eta);
+    waitInfo.textContent = `Te quedan ~${rem} min. Fin aprox: ${fromMin(nowMin()+rem)}.`;
+    waitHint.textContent = (st.label==='ROJO')
+      ? `⚠️ Si lo agregás, hoy te pasás del cierre.`
+      : `Si se queda, tocá “Agregar a cola”.`;
+  }
+  waitName.value = '';
+  waitDlg.showModal();
 });
 
-colorClientDialog.addEventListener('close', () => {
-  if(colorClientDialog.returnValue!=='ok') return;
-  const v = colorClientSelect.value;
-  const id = Number(v.split(':')[1]);
+waitDlg.addEventListener('close', () => {
+  if(waitDlg.returnValue!=='ok') return;
 
-  let name = '';
-  if(state.current && state.current.id===id) name = state.current.name||'';
-  const q = state.queue.find(x => x.id===id);
-  if(q) name = q.name||name;
-
-  state.color = {
-    clientId: id,
-    clientName: name,
-    stage: 'idle',
-    dueMin: null,
-    alertMin: null,
-    alerted: false,
-    reservedFinalCut: true
-  };
-  render();
-});
-
-function startColorWait(minutes){
-  if(!state.color) return;
-  const nowM = nowMin();
-  const lead = Number(state.config.colorLead)||8;
-  state.color.stage = 'waiting';
-  state.color.dueMin = nowM + minutes;
-  state.color.alertMin = (nowM + minutes) - lead;
-  state.color.alerted = false;
-  render();
-}
-colorWait40Btn.addEventListener('click', () => startColorWait(40));
-colorWait45Btn.addEventListener('click', () => startColorWait(45));
-
-/* Atender color: pausa corte actual y resetea el color a idle (vos después elegís nueva espera) */
-attendColorBtn.addEventListener('click', () => {
-  if(!state.color) return;
-
-  if(state.current){
-    pauseCurrent('color');
-    state.current = null;
+  const name = (waitName.value||'').trim();
+  if(name){
+    state.knownNames = Array.from(new Set([...(state.knownNames||[]), name]));
   }
 
-  state.color.stage = 'idle';
-  state.color.dueMin = null;
-  state.color.alertMin = null;
-  state.color.alerted = false;
-
-  vibrate(200);
+  state.queue.push({ id: state.seq++, name, serviceHint:'auto' });
+  vibrate(80);
   render();
 });
 
-/* Volver al corte */
-resumeClientBtn.addEventListener('click', () => {
-  if(!state.paused) return;
-  resumeCurrent();
+/* DESHACER: borra el último de la cola */
+undoBtn.addEventListener('click', () => {
+  if(!state.queue.length) return;
+  state.queue.pop();
+  vibrate(60);
   render();
 });
+
+/* REGISTRO */
+logBtn.addEventListener('click', () => {
+  renderLog();
+  logDlg.showModal();
+});
+
+/* Copiar registro */
+copyBtn.addEventListener('click', async (e) => {
+  e.preventDefault();
+  const text = logToText();
+  try{
+    await navigator.clipboard.writeText(text || '');
+    vibrate(120);
+    copyBtn.textContent = 'Copiado';
+    setTimeout(()=>copyBtn.textContent='Copiar', 700);
+  }catch{
+    copyBtn.textContent = 'No se pudo';
+    setTimeout(()=>copyBtn.textContent='Copiar', 900);
+  }
+});
+
+/* Borrar registro */
+clearBtn.addEventListener('click', (e) => {
+  e.preventDefault();
+  state.log = [];
+  renderLog();
+  vibrate(120);
+  render();
+});
+
+/* ===== Tick ===== */
+setInterval(render, 2500);
 
 /* Service Worker */
 if('serviceWorker' in navigator){
@@ -1068,9 +836,6 @@ if('serviceWorker' in navigator){
   });
 }
 
-/* Tick */
-setInterval(render, 8000);
-bindPulse();
 render();
 </script>
 </body>
