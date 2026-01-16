@@ -11,7 +11,6 @@
 
   <link rel="manifest" href="./manifest.webmanifest" />
   <link rel="apple-touch-icon" href="./icons/icon-192.png" />
-
   <title>Turnos</title>
 
   <style>
@@ -82,7 +81,7 @@
       box-shadow: var(--inset);
       font-size: 12px;
     }
-    .dot{ width:10px; height:10px; border-radius: 999px; display:inline-block; box-shadow: 0 0 18px rgba(92,245,111,.32); }
+    .dot{ width:10px; height:10px; border-radius: 999px; display:inline-block; }
 
     .center{
       display:flex;
@@ -91,7 +90,6 @@
       padding: 10px 0;
     }
 
-    /* === Botón circular principal con ring === */
     .mainBtn{
       width: 260px;
       height: 260px;
@@ -172,10 +170,9 @@
 
     .mainBtn:active .core{ transform: translateY(1px) scale(.995); }
 
-    /* === Botón Espera === */
     .bottomRow{
       display:flex;
-      align-items:center;
+      align-items:flex-start;
       justify-content: space-between;
       gap: 12px;
       padding: 14px;
@@ -196,6 +193,7 @@
       font-weight: 1000;
       cursor:pointer;
       position: relative;
+      flex: 0 0 auto;
     }
     .waitBtn::after{
       content:"";
@@ -207,7 +205,48 @@
     }
     .waitBtn:active{ transform: translateY(1px) scale(.995); }
 
-    /* Acciones pequeñas debajo */
+    .queueBox{
+      flex:1;
+      text-align:right;
+    }
+    .queueIcons{
+      display:flex;
+      align-items:center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content:flex-end;
+      max-width: 280px;
+    }
+    .person{
+      width: 22px;
+      height: 22px;
+      opacity: .95;
+      filter: drop-shadow(0 0 10px rgba(78,166,255,.25));
+    }
+    .qText{
+      font-size: 12px;
+      color: rgba(234,240,255,.75);
+      margin-top: 6px;
+      text-align:right;
+    }
+
+    .qList{
+      margin-top: 10px;
+      display:flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items:stretch;
+    }
+    .qItem{
+      padding: 10px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+      text-align:left;
+    }
+    .qItem strong{ display:block; font-size: 13px; margin-bottom: 4px; }
+    .qItem .muted{ font-size: 12px; color: rgba(234,240,255,.72); }
+
     .miniRow{
       display:flex;
       gap: 10px;
@@ -230,29 +269,6 @@
     .miniBtnRed{ border-color: rgba(255,78,106,.32); box-shadow: 0 0 18px rgba(255,78,106,.12), var(--inset); }
     .miniBtn:active{ transform: translateY(1px); }
 
-    /* === Cola iconos === */
-    .queueIcons{
-      display:flex;
-      align-items:center;
-      gap: 8px;
-      flex-wrap: wrap;
-      justify-content:flex-end;
-      max-width: 280px;
-    }
-    .person{
-      width: 22px;
-      height: 22px;
-      opacity: .95;
-      filter: drop-shadow(0 0 10px rgba(78,166,255,.25));
-    }
-    .qText{
-      font-size: 12px;
-      color: rgba(234,240,255,.75);
-      margin-top: 6px;
-      text-align:right;
-    }
-
-    /* === Modal === */
     dialog::backdrop{ background: rgba(0,0,0,.70); }
     dialog{ border:0; padding:0; background: transparent; }
     .sheet{
@@ -265,7 +281,7 @@
     }
     .sheet h3{ margin:0 0 8px; font-size: 16px; }
     .sheet .muted{ color: var(--muted); font-size: 12px; }
-    .sheet input[type="text"], .sheet select{
+    .sheet select{
       width: 100%;
       margin-top: 10px;
       background: rgba(255,255,255,.03);
@@ -277,8 +293,7 @@
       outline:none;
       box-shadow: var(--inset);
     }
-
-    .sheet .row{
+    .row{
       display:flex;
       gap: 10px;
       flex-wrap: wrap;
@@ -326,7 +341,7 @@
       background: rgba(255,255,255,.03);
     }
     .logItem strong{ display:block; font-size: 13px; margin-bottom: 4px; }
-    .logItem .muted{ font-size: 12px; }
+    .logItem .muted{ font-size: 12px; color: rgba(234,240,255,.72); }
   </style>
 </head>
 
@@ -353,10 +368,10 @@
     <div class="center">
       <button class="mainBtn" id="mainBtn" aria-label="Iniciar o finalizar">
         <div class="ring" id="ring" style="--p: 0deg; --ringFill: var(--blue);"></div>
-        <div class="core" id="core">
+        <div class="core">
           <div class="actionText" id="actionText">INICIAR</div>
           <div class="countdown" id="countdown">—</div>
-          <div class="subText" id="subText">Tocá para arrancar el corte.</div>
+          <div class="subText" id="subText">Tocá para arrancar.</div>
         </div>
       </button>
     </div>
@@ -364,9 +379,10 @@
     <div class="bottomRow">
       <button class="waitBtn" id="waitBtn">ESPERA</button>
 
-      <div style="flex:1; text-align:right;">
+      <div class="queueBox">
         <div class="queueIcons" id="queueIcons"></div>
         <div class="qText" id="qText">0 en espera</div>
+        <div class="qList" id="qList"></div>
       </div>
     </div>
 
@@ -376,21 +392,19 @@
     </div>
   </div>
 
-  <!-- Sugerencias de nombres -->
-  <datalist id="nameSuggestions"></datalist>
-
-  <!-- Modal: iniciar -->
+  <!-- Modal: iniciar (solo servicio) -->
   <dialog id="startDlg">
     <form method="dialog" class="sheet">
-      <h3>Iniciar corte</h3>
-      <div class="muted">Nombre opcional. Servicio opcional (podés confirmar al final).</div>
+      <h3>Iniciar</h3>
+      <div class="muted">Elegí el servicio.</div>
 
-      <input id="startName" type="text" list="nameSuggestions" placeholder="Ej: Juan" autocomplete="off">
-
-      <select id="startService" style="margin-top:10px;">
-        <option value="auto">Servicio: lo confirmo al final</option>
+      <select id="startService">
         <option value="cut">Corte</option>
         <option value="cutbeard">Corte + Barba</option>
+        <option value="cutthermal">Corte + Sellado térmico</option>
+        <option value="cutbeardthermal">Corte + Barba + Sellado térmico</option>
+        <option value="color">Color</option>
+        <option value="perm">Permanente</option>
       </select>
 
       <div class="row">
@@ -400,15 +414,19 @@
     </form>
   </dialog>
 
-  <!-- Modal: finalizar -->
+  <!-- Modal: finalizar (permite corregir servicio real) -->
   <dialog id="finishDlg">
     <form method="dialog" class="sheet">
       <h3>Finalizar</h3>
       <div class="muted" id="finishInfo">—</div>
 
-      <select id="finishService" style="margin-top:10px;">
+      <select id="finishService">
         <option value="cut">Corte</option>
         <option value="cutbeard">Corte + Barba</option>
+        <option value="cutthermal">Corte + Sellado térmico</option>
+        <option value="cutbeardthermal">Corte + Barba + Sellado térmico</option>
+        <option value="color">Color</option>
+        <option value="perm">Permanente</option>
       </select>
 
       <div class="row">
@@ -423,13 +441,33 @@
     <form method="dialog" class="sheet">
       <h3>Espera</h3>
       <div class="muted" id="waitInfo">—</div>
-      <div class="hintLine" id="waitHint">—</div>
 
-      <input id="waitName" type="text" list="nameSuggestions" placeholder="Nombre (si se queda) - opcional" autocomplete="off">
+      <select id="waitService">
+        <option value="cut">Corte</option>
+        <option value="cutbeard">Corte + Barba</option>
+        <option value="cutthermal">Corte + Sellado térmico</option>
+        <option value="cutbeardthermal">Corte + Barba + Sellado térmico</option>
+        <option value="color">Color</option>
+        <option value="perm">Permanente</option>
+      </select>
+
+      <div class="hintLine" id="waitHint">—</div>
 
       <div class="row">
         <button class="btn" value="cancel">No se queda</button>
-        <button class="btn btnBlue" value="ok">Agregar a cola</button>
+        <button class="btn btnBlue" value="ok" id="waitOkBtn">Agregar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Modal: confirmación por pasarse de horario -->
+  <dialog id="overDlg">
+    <form method="dialog" class="sheet">
+      <h3>Se pasa del cierre</h3>
+      <div class="muted" id="overText">—</div>
+      <div class="row">
+        <button class="btn" value="cancel">No</button>
+        <button class="btn btnRed" value="ok">Aceptar igual</button>
       </div>
     </form>
   </dialog>
@@ -451,28 +489,39 @@
   </dialog>
 
 <script>
-/* ===== Helpers tiempo ===== */
+/* ===== Tiempo helpers ===== */
 const pad = n => String(n).padStart(2,'0');
 const nowMin = () => { const d=new Date(); return d.getHours()*60+d.getMinutes(); }
 const fromMin = (m) => { m=((m%1440)+1440)%1440; return pad(Math.floor(m/60))+':'+pad(m%60); }
 const toMin = (hhmm) => { const [h,m]=hhmm.split(':').map(Number); return h*60+m; }
 
-/* ===== Storage ===== */
-const LS='turnos_minimal_v2';
+const LS='turnos_minimal_v4';
 const load=()=>{ try{return JSON.parse(localStorage.getItem(LS))||null}catch{return null} };
 const save=(s)=>localStorage.setItem(LS, JSON.stringify(s));
 
 /* ===== Estado ===== */
 const defaultState={
-  cfg:{ shiftEnd:'22:00', hardOver:10, buffer:12 },
+  cfg:{
+    shiftEnd:'22:00',
+    hardOver:10,  // como máximo aceptar hasta 22:10
+    buffer:12     // margen semáforo
+  },
   seq:1,
-  current:null,      // { id, name, startedAtMin, activeMin, lastResumeMin, serviceHint }
-  queue:[],          // [{ id, name, serviceHint }]
-  knownNames:[],
-  log:[],            // historial del día
-  learning:{ cutAvg:38, beardExtra:18 }
+  current:null, // {id, startedAtMin, activeMin, lastResumeMin, service}
+  queue:[],     // [{id, service}]
+  log:[],
+  learning:{
+    cutAvg:38,
+    beardExtra:18,
+    thermalExtra:22,
+    // Conservadores (por ahora NO usan tiempos muertos):
+    // Color: depende mucho; acá lo ponemos alto a propósito.
+    colorBlock:210,
+    // Permanente: ~60 aplicar + 50 espera + 30 neutralizado/esperas + 10 lavados + corte(38) ~= ~188
+    permBlock:190
+  }
 };
-let state=load()||structuredClone(defaultState);
+let state = load() || structuredClone(defaultState);
 
 /* ===== UI refs ===== */
 const elNow=document.getElementById('now');
@@ -491,14 +540,12 @@ const ring=document.getElementById('ring');
 const waitBtn=document.getElementById('waitBtn');
 const queueIcons=document.getElementById('queueIcons');
 const qText=document.getElementById('qText');
+const qList=document.getElementById('qList');
 
 const undoBtn=document.getElementById('undoBtn');
 const logBtn=document.getElementById('logBtn');
 
-const nameSuggestions=document.getElementById('nameSuggestions');
-
 const startDlg=document.getElementById('startDlg');
-const startName=document.getElementById('startName');
 const startService=document.getElementById('startService');
 
 const finishDlg=document.getElementById('finishDlg');
@@ -507,8 +554,12 @@ const finishService=document.getElementById('finishService');
 
 const waitDlg=document.getElementById('waitDlg');
 const waitInfo=document.getElementById('waitInfo');
+const waitService=document.getElementById('waitService');
 const waitHint=document.getElementById('waitHint');
-const waitName=document.getElementById('waitName');
+const waitOkBtn=document.getElementById('waitOkBtn');
+
+const overDlg=document.getElementById('overDlg');
+const overText=document.getElementById('overText');
 
 const logDlg=document.getElementById('logDlg');
 const logSummary=document.getElementById('logSummary');
@@ -518,26 +569,31 @@ const clearBtn=document.getElementById('clearBtn');
 
 function vibrate(ms){ try{ if(navigator.vibrate) navigator.vibrate(ms);}catch{} }
 
-/* ===== Nombres sugeridos ===== */
-function buildNameSuggestions(){
-  const base=[
-    'Juan','Julián','Joaquín','José','Jorge','Javier',
-    'Martín','Matías','Mateo','Marcos','Miguel',
-    'Franco','Federico','Facundo','Fernando',
-    'Nicolás','Nahuel','Lucas','Leandro',
-    'Agustín','Santiago','Sebastián','Tomás','Thiago',
-    'Diego','Pablo','Pedro','Gonzalo','Kevin','Brian'
-  ];
-  const all = Array.from(new Set([...base, ...(state.knownNames||[])])).sort((a,b)=>a.localeCompare(b));
-  nameSuggestions.innerHTML = all.map(n=>`<option value="${n}"></option>`).join('');
+/* ===== Servicios ===== */
+const svcLabel = {
+  cut: 'Corte',
+  cutbeard: 'Corte + Barba',
+  cutthermal: 'Corte + Sellado térmico',
+  cutbeardthermal: 'Corte + Barba + Sellado térmico',
+  color: 'Color',
+  perm: 'Permanente'
+};
+
+function estFor(service){
+  const L = state.learning;
+  const base = L.cutAvg;
+  switch(service){
+    case 'cut': return Math.round(base);
+    case 'cutbeard': return Math.round(base + L.beardExtra);
+    case 'cutthermal': return Math.round(base + L.thermalExtra);
+    case 'cutbeardthermal': return Math.round(base + L.beardExtra + L.thermalExtra);
+    case 'color': return Math.round(L.colorBlock);
+    case 'perm': return Math.round(L.permBlock);
+    default: return Math.round(base);
+  }
 }
 
-/* ===== Estimaciones ===== */
-function estFor(service){
-  const base = state.learning.cutAvg;
-  if(service==='cutbeard') return Math.round(base + state.learning.beardExtra);
-  return Math.round(base);
-}
+/* ===== Cliente actual ===== */
 function currentActiveMin(){
   if(!state.current) return 0;
   const now=nowMin();
@@ -545,20 +601,38 @@ function currentActiveMin(){
 }
 function currentRemainingMin(){
   if(!state.current) return 0;
-  const est = estFor(state.current.serviceHint || 'auto');
+  const est = estFor(state.current.service);
   return Math.max(1, est - currentActiveMin());
 }
 
-/* ===== ETA (salida estimada) ===== */
-function etaFinishMin(){
+/* ===== Construir schedule (inicio/fin de cada turno) ===== */
+function buildSchedule(){
   const now = nowMin();
   let t = now;
-  if(state.current) t += currentRemainingMin();
-  for(const c of state.queue){
-    t += estFor(c.serviceHint || 'auto');
+  const rows = [];
+
+  if(state.current){
+    const rem = currentRemainingMin();
+    rows.push({ kind:'current', service: state.current.service, start: state.current.startedAtMin, end: now + rem });
+    t = now + rem;
   }
-  return t;
+  for(const item of state.queue){
+    const dur = estFor(item.service);
+    const start = t;
+    const end = t + dur;
+    rows.push({ kind:'queue', service: item.service, start, end });
+    t = end;
+  }
+  return rows;
 }
+
+function etaFinishMin(){
+  const sched = buildSchedule();
+  if(!sched.length) return nowMin();
+  return sched[sched.length - 1].end;
+}
+
+/* ===== Semáforo ===== */
 function statusFor(eta){
   const end=toMin(state.cfg.shiftEnd);
   const hard=end + state.cfg.hardOver;
@@ -570,7 +644,7 @@ function statusFor(eta){
   return {label:'ROJO', color:'var(--red)', explain:`No entra más. Con margen: ${fromMin(etaBuf)}.`};
 }
 
-/* ===== Cola iconos ===== */
+/* ===== UI cola ===== */
 function personSvg(){
   return `
   <svg class="person" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -580,8 +654,10 @@ function personSvg(){
       stroke="rgba(78,166,255,.95)" stroke-width="1.6" stroke-linecap="round"/>
   </svg>`;
 }
+
 function renderQueue(){
   const n = state.queue.length;
+
   queueIcons.innerHTML = '';
   for(let i=0;i<Math.min(n,12);i++){
     const wrap=document.createElement('div');
@@ -589,9 +665,19 @@ function renderQueue(){
     queueIcons.appendChild(wrap.firstElementChild);
   }
   qText.textContent = `${n} en espera`;
+
+  const sched = buildSchedule().filter(x=>x.kind==='queue');
+  qList.innerHTML = '';
+  for(const s of sched){
+    const div=document.createElement('div');
+    div.className='qItem';
+    div.innerHTML = `<strong>${svcLabel[s.service]}</strong>
+      <div class="muted">Inicia ${fromMin(s.start)} · Sale ${fromMin(s.end)}</div>`;
+    qList.appendChild(div);
+  }
 }
 
-/* ===== Ring progreso ===== */
+/* ===== Ring ===== */
 function setRingProgress(pct, running){
   const deg = Math.max(0, Math.min(1, pct)) * 360;
   ring.style.setProperty('--p', `${deg}deg`);
@@ -603,7 +689,7 @@ function renderLog(){
   const items = state.log || [];
   const total = items.length;
   const totalMin = items.reduce((a,x)=>a+(x.durationMin||0),0);
-  logSummary.textContent = `${total} clientes · ${totalMin} min activos`;
+  logSummary.textContent = `${total} servicios · ${totalMin} min activos`;
 
   logList.innerHTML = '';
   if(!items.length){
@@ -611,28 +697,24 @@ function renderLog(){
     return;
   }
   for(const h of items.slice().reverse()){
-    const name = h.name || '(sin nombre)';
-    const svc = (h.service==='cutbeard') ? 'Corte + Barba' : 'Corte';
+    const svc = svcLabel[h.service] || h.service;
     const line = `${fromMin(h.startMin)}-${fromMin(h.endMin)} · ${h.durationMin}m · ${svc}`;
     const div=document.createElement('div');
     div.className='logItem';
-    div.innerHTML = `<strong>${name}</strong><div class="muted">${line}</div>`;
+    div.innerHTML = `<strong>${svc}</strong><div class="muted">${line}</div>`;
     logList.appendChild(div);
   }
 }
 function logToText(){
   const items = state.log || [];
   return items.map(h=>{
-    const name = h.name || '(sin nombre)';
-    const svc = (h.service==='cutbeard') ? 'corte+barba' : 'corte';
-    return `${fromMin(h.startMin)}-${fromMin(h.endMin)} | ${name} | ${svc} | ${h.durationMin}min`;
+    const svc = h.service;
+    return `${fromMin(h.startMin)}-${fromMin(h.endMin)} | ${svcLabel[svc]||svc} | ${h.durationMin}min`;
   }).join('\n');
 }
 
-/* ===== Render principal ===== */
+/* ===== Render ===== */
 function render(){
-  buildNameSuggestions();
-
   const now=nowMin();
   elNow.textContent = fromMin(now);
 
@@ -651,24 +733,22 @@ function render(){
     actionText.textContent = 'INICIAR';
     countdown.textContent = '—';
     subText.textContent = state.queue.length
-      ? `Hay ${state.queue.length} en espera. Tocá INICIAR para el próximo.`
-      : 'Tocá para arrancar el corte.';
+      ? `Hay ${state.queue.length} en espera.`
+      : 'Tocá para arrancar.';
     setRingProgress(0, false);
-    elStatusLine.textContent = (st.label==='ROJO')
-      ? 'Estás al límite: si agregás, te pasás.'
-      : 'Listo.';
+    elStatusLine.textContent = 'Listo.';
   } else {
     actionText.textContent = 'FINALIZAR';
     const rem=currentRemainingMin();
     countdown.textContent = `${rem}m`;
-    subText.textContent = `Te quedan ~${rem} min. Tocá ESPERA si llega alguien.`;
-    const est = estFor(state.current.serviceHint||'auto');
+    const fin = now + rem;
+    subText.textContent = `Termina aprox ${fromMin(fin)} · ${svcLabel[state.current.service]}`;
+    const est = estFor(state.current.service);
     const done = currentActiveMin();
     setRingProgress(done / Math.max(1, est), true);
     elStatusLine.textContent = `En curso · Inicio ${fromMin(state.current.startedAtMin)} · Activo ${done}m`;
   }
 
-  // habilitar/deshabilitar deshacer
   undoBtn.disabled = state.queue.length===0;
   undoBtn.style.opacity = undoBtn.disabled ? 0.45 : 1;
 
@@ -678,19 +758,12 @@ function render(){
 /* ===== Acciones ===== */
 mainBtn.addEventListener('click', () => {
   if(!state.current){
-    // Iniciar: propone el primero de cola como default
-    startName.value = '';
-    startService.value = 'auto';
-    if(state.queue.length){
-      const next = state.queue[0];
-      startName.value = next.name || '';
-      startService.value = next.serviceHint || 'auto';
-    }
+    startService.value = 'cut';
     startDlg.showModal();
   } else {
     const active = currentActiveMin();
-    finishInfo.textContent = `${state.current.name ? state.current.name + ' · ' : ''}Tiempo activo: ${active} min`;
-    finishService.value = state.current.serviceHint==='cutbeard' ? 'cutbeard' : 'cut';
+    finishInfo.textContent = `Tiempo activo: ${active} min`;
+    finishService.value = state.current.service || 'cut';
     finishDlg.showModal();
   }
 });
@@ -698,27 +771,16 @@ mainBtn.addEventListener('click', () => {
 startDlg.addEventListener('close', () => {
   if(startDlg.returnValue!=='ok') return;
 
-  let picked = null;
-  if(state.queue.length) picked = state.queue.shift();
-
-  const name = (startName.value||'').trim() || (picked?.name||'');
-  const service = startService.value || (picked?.serviceHint||'auto');
-
-  if(name){
-    state.knownNames = Array.from(new Set([...(state.knownNames||[]), name]));
-  }
-
-  const id = picked?.id ?? state.seq++;
+  const service = startService.value || 'cut';
   const now=nowMin();
   state.current = {
-    id,
-    name,
+    id: state.seq++,
     startedAtMin: now,
     activeMin: 0,
     lastResumeMin: now,
-    serviceHint: service
+    service
   };
-
+  vibrate(60);
   render();
 });
 
@@ -727,68 +789,100 @@ finishDlg.addEventListener('close', () => {
   if(!state.current) return;
 
   const done = Math.max(1, currentActiveMin());
-  const service = finishService.value;
+  const service = finishService.value || state.current.service || 'cut';
 
-  // Aprendizaje simple (EMA)
+  // Aprendizaje simple SOLO en corte y corte+barba (lo demás lo dejamos fijo)
   const a = 0.22;
-  const estBase = state.learning.cutAvg;
-  if(service==='cutbeard'){
+  if(service==='cut'){
+    state.learning.cutAvg = state.learning.cutAvg*(1-a) + done*a;
+  } else if(service==='cutbeard'){
     const baseObs = Math.max(10, done - state.learning.beardExtra);
-    state.learning.cutAvg = estBase*(1-a) + baseObs*a;
+    state.learning.cutAvg = state.learning.cutAvg*(1-a) + baseObs*a;
     const extraObs = Math.max(5, done - state.learning.cutAvg);
     state.learning.beardExtra = state.learning.beardExtra*(1-a) + extraObs*a;
-  } else {
-    state.learning.cutAvg = estBase*(1-a) + done*a;
   }
 
   // Registro
   const startMin = state.current.startedAtMin;
   const endMin = nowMin();
-  state.log.push({
-    id: state.current.id,
-    name: state.current.name || '',
-    service,
-    startMin,
-    endMin,
-    durationMin: done
-  });
+  state.log.push({ id: state.current.id, service, startMin, endMin, durationMin: done });
 
-  // cerrar
   state.current = null;
+  vibrate(80);
   render();
 });
 
+/* ===== ESPERA + confirmación si pasa de las 22 ===== */
+let pendingAdd = null;
+
+function projectedStartEndForNew(service){
+  const sched = buildSchedule();
+  const lastEnd = sched.length ? sched[sched.length-1].end : nowMin();
+  const dur = estFor(service);
+  return { start:lastEnd, end:lastEnd + dur, dur };
+}
+
 waitBtn.addEventListener('click', () => {
-  if(!state.current){
-    waitInfo.textContent = 'No hay corte activo. Si querés, podés agregar alguien a la cola.';
-    waitHint.textContent = `Si lo agregás, después tocás INICIAR cuando quieras.`;
-  } else {
-    const rem = currentRemainingMin();
-    const eta = etaFinishMin();
-    const st = statusFor(eta);
-    waitInfo.textContent = `Te quedan ~${rem} min. Fin aprox: ${fromMin(nowMin()+rem)}.`;
-    waitHint.textContent = (st.label==='ROJO')
-      ? `⚠️ Si lo agregás, hoy te pasás del cierre.`
-      : `Si se queda, tocá “Agregar a cola”.`;
-  }
-  waitName.value = '';
+  const rem = state.current ? currentRemainingMin() : 0;
+  const fin = state.current ? (nowMin() + rem) : nowMin();
+  waitInfo.textContent = state.current
+    ? `Te quedan ~${rem} min. Termina aprox ${fromMin(fin)}.`
+    : `No hay corte activo. Esto agrega a la cola.`;
+
+  waitService.value = 'cut';
+  const p = projectedStartEndForNew(waitService.value);
+  waitHint.textContent = `Si lo agregás: inicia ${fromMin(p.start)} · sale ${fromMin(p.end)}.`;
   waitDlg.showModal();
+});
+
+waitService.addEventListener('change', () => {
+  const p = projectedStartEndForNew(waitService.value);
+  waitHint.textContent = `Si lo agregás: inicia ${fromMin(p.start)} · sale ${fromMin(p.end)}.`;
 });
 
 waitDlg.addEventListener('close', () => {
   if(waitDlg.returnValue!=='ok') return;
 
-  const name = (waitName.value||'').trim();
-  if(name){
-    state.knownNames = Array.from(new Set([...(state.knownNames||[]), name]));
+  const service = waitService.value || 'cut';
+  const p = projectedStartEndForNew(service);
+
+  const end = toMin(state.cfg.shiftEnd);
+  if(p.end > end){
+    pendingAdd = { service, p };
+    overText.textContent = `Este turno terminaría a ${fromMin(p.end)} (cierre ${state.cfg.shiftEnd}). ¿Aceptar igual?`;
+    overDlg.showModal();
+    return;
   }
 
-  state.queue.push({ id: state.seq++, name, serviceHint:'auto' });
+  state.queue.push({ id: state.seq++, service });
   vibrate(80);
   render();
 });
 
-/* DESHACER: borra el último de la cola */
+overDlg.addEventListener('close', () => {
+  if(overDlg.returnValue!=='ok'){
+    pendingAdd = null;
+    return;
+  }
+  if(!pendingAdd) return;
+
+  const end = toMin(state.cfg.shiftEnd);
+  const hard = end + state.cfg.hardOver;
+
+  // Si se pasa más que 22:10, no lo agregamos (límite duro)
+  if(pendingAdd.p.end > hard){
+    pendingAdd = null;
+    vibrate(120);
+    return;
+  }
+
+  state.queue.push({ id: state.seq++, service: pendingAdd.service });
+  pendingAdd = null;
+  vibrate(120);
+  render();
+});
+
+/* DESHACER */
 undoBtn.addEventListener('click', () => {
   if(!state.queue.length) return;
   state.queue.pop();
@@ -802,7 +896,6 @@ logBtn.addEventListener('click', () => {
   logDlg.showModal();
 });
 
-/* Copiar registro */
 copyBtn.addEventListener('click', async (e) => {
   e.preventDefault();
   const text = logToText();
@@ -817,7 +910,6 @@ copyBtn.addEventListener('click', async (e) => {
   }
 });
 
-/* Borrar registro */
 clearBtn.addEventListener('click', (e) => {
   e.preventDefault();
   state.log = [];
@@ -826,7 +918,7 @@ clearBtn.addEventListener('click', (e) => {
   render();
 });
 
-/* ===== Tick ===== */
+/* Tick */
 setInterval(render, 2500);
 
 /* Service Worker */
