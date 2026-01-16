@@ -31,6 +31,9 @@
       --shadow: 0 18px 46px rgba(0,0,0,.68);
       --inset: inset 0 1px 0 rgba(255,255,255,.07), inset 0 -1px 0 rgba(0,0,0,.55);
       --r: 18px;
+
+      --safeTop: env(safe-area-inset-top, 0px);
+      --safeBottom: env(safe-area-inset-bottom, 0px);
     }
 
     *{ box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
@@ -45,8 +48,7 @@
     .wrap{
       max-width: 520px;
       margin: 0 auto;
-      padding: 16px;
-      padding-bottom: 22px;
+      padding: calc(16px + var(--safeTop)) 16px calc(22px + var(--safeBottom));
       display:flex;
       flex-direction: column;
       gap: 14px;
@@ -82,6 +84,17 @@
       font-size: 12px;
     }
     .dot{ width:10px; height:10px; border-radius: 999px; display:inline-block; }
+
+    .alert{
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+      font-size: 12px;
+      color: rgba(234,240,255,.9);
+    }
+    .alert strong{ color: #fff; }
 
     .center{
       display:flex;
@@ -272,7 +285,7 @@
     dialog::backdrop{ background: rgba(0,0,0,.70); }
     dialog{ border:0; padding:0; background: transparent; }
     .sheet{
-      width: min(520px, calc(100vw - 26px));
+      width: min(560px, calc(100vw - 26px));
       border-radius: 18px;
       background: rgba(0,0,0,.92);
       border: 1px solid rgba(255,255,255,.12);
@@ -280,8 +293,9 @@
       padding: 14px;
     }
     .sheet h3{ margin:0 0 8px; font-size: 16px; }
+    .sheet h4{ margin:14px 0 8px; font-size: 13px; color: rgba(234,240,255,.9); }
     .sheet .muted{ color: var(--muted); font-size: 12px; }
-    .sheet select{
+    .sheet select, .sheet input{
       width: 100%;
       margin-top: 10px;
       background: rgba(255,255,255,.03);
@@ -293,6 +307,7 @@
       outline:none;
       box-shadow: var(--inset);
     }
+    .grid2{ display:grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .row{
       display:flex;
       gap: 10px;
@@ -342,6 +357,21 @@
     }
     .logItem strong{ display:block; font-size: 13px; margin-bottom: 4px; }
     .logItem .muted{ font-size: 12px; color: rgba(234,240,255,.72); }
+
+    .toggleRow{
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+    }
+    .toggleRow label{ font-size: 12px; color: rgba(234,240,255,.9); }
+    .toggleRow input{ width:auto; margin:0; }
+    .smallNote{ font-size: 11px; color: rgba(234,240,255,.68); margin-top: 6px; }
   </style>
 </head>
 
@@ -352,6 +382,7 @@
         <div class="label">Ahora</div>
         <div class="now" id="now">--:--</div>
         <div class="tiny" id="statusLine">—</div>
+        <div class="alert" id="bgAlert" style="display:none;"></div>
       </div>
 
       <div style="text-align:right;">
@@ -389,6 +420,7 @@
     <div class="miniRow">
       <button class="miniBtn miniBtnRed" id="undoBtn">DESHACER</button>
       <button class="miniBtn miniBtnBlue" id="logBtn">REGISTRO</button>
+      <button class="miniBtn" id="settingsBtn">AJUSTES</button>
     </div>
   </div>
 
@@ -398,36 +430,24 @@
       <h3>Iniciar</h3>
       <div class="muted">Elegí el servicio.</div>
 
-      <select id="startService">
-        <option value="cut">Corte</option>
-        <option value="cutbeard">Corte + Barba</option>
-        <option value="cutthermal">Corte + Sellado térmico</option>
-        <option value="cutbeardthermal">Corte + Barba + Sellado térmico</option>
-        <option value="color">Color</option>
-        <option value="perm">Permanente</option>
-      </select>
+      <select id="startService"></select>
 
       <div class="row">
         <button class="btn" value="cancel">Cancelar</button>
         <button class="btn btnBlue" value="ok">Arrancar</button>
       </div>
+
+      <div class="smallNote">Tip: Color/Permanente usan “fases” si activaste el modo en Ajustes.</div>
     </form>
   </dialog>
 
-  <!-- Modal: finalizar (permite corregir servicio real) -->
+  <!-- Modal: finalizar -->
   <dialog id="finishDlg">
     <form method="dialog" class="sheet">
       <h3>Finalizar</h3>
       <div class="muted" id="finishInfo">—</div>
 
-      <select id="finishService">
-        <option value="cut">Corte</option>
-        <option value="cutbeard">Corte + Barba</option>
-        <option value="cutthermal">Corte + Sellado térmico</option>
-        <option value="cutbeardthermal">Corte + Barba + Sellado térmico</option>
-        <option value="color">Color</option>
-        <option value="perm">Permanente</option>
-      </select>
+      <select id="finishService"></select>
 
       <div class="row">
         <button class="btn" value="cancel">Cancelar</button>
@@ -442,14 +462,7 @@
       <h3>Espera</h3>
       <div class="muted" id="waitInfo">—</div>
 
-      <select id="waitService">
-        <option value="cut">Corte</option>
-        <option value="cutbeard">Corte + Barba</option>
-        <option value="cutthermal">Corte + Sellado térmico</option>
-        <option value="cutbeardthermal">Corte + Barba + Sellado térmico</option>
-        <option value="color">Color</option>
-        <option value="perm">Permanente</option>
-      </select>
+      <select id="waitService"></select>
 
       <div class="hintLine" id="waitHint">—</div>
 
@@ -468,6 +481,137 @@
       <div class="row">
         <button class="btn" value="cancel">No</button>
         <button class="btn btnRed" value="ok">Aceptar igual</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Modal: evento de fase (Color/Permanente) -->
+  <dialog id="phaseDlg">
+    <form method="dialog" class="sheet">
+      <h3 id="phaseTitle">Paso</h3>
+      <div class="muted" id="phaseBody">—</div>
+      <div class="row">
+        <button class="btn" value="cancel">Ahora no</button>
+        <button class="btn btnBlue" value="ok">Hacer paso</button>
+      </div>
+      <div class="smallNote">Si estabas cortando, el corte se pausa y luego se retoma.</div>
+    </form>
+  </dialog>
+
+  <!-- Modal: ajustes -->
+  <dialog id="settingsDlg">
+    <form method="dialog" class="sheet">
+      <h3>Ajustes</h3>
+      <div class="muted">Configurá tiempos y modo automático.</div>
+
+      <h4>Horario</h4>
+      <div class="grid2">
+        <div>
+          <div class="muted">Cierre</div>
+          <input id="cfgEnd" type="text" placeholder="22:00">
+        </div>
+        <div>
+          <div class="muted">Tolerancia (min)</div>
+          <input id="cfgHard" type="number" min="0" step="1">
+        </div>
+      </div>
+      <div class="grid2" style="margin-top:10px;">
+        <div>
+          <div class="muted">Margen semáforo (min)</div>
+          <input id="cfgBuf" type="number" min="0" step="1">
+        </div>
+        <div>
+          <div class="muted">Modo fases (Color/Permanente)</div>
+          <div class="toggleRow" style="margin-top:10px;">
+            <label>Activar</label>
+            <input id="cfgPhases" type="checkbox">
+          </div>
+        </div>
+      </div>
+
+      <h4>Corte / Barba / Sellado</h4>
+      <div class="toggleRow">
+        <label>Auto (aprende con tus registros)</label>
+        <input id="autoLearn" type="checkbox">
+      </div>
+
+      <div class="grid2">
+        <div>
+          <div class="muted">Corte MIN (min)</div>
+          <input id="cutMin" type="number" min="5" step="1">
+        </div>
+        <div>
+          <div class="muted">Corte MAX (min)</div>
+          <input id="cutMax" type="number" min="5" step="1">
+        </div>
+      </div>
+
+      <div class="grid2" style="margin-top:10px;">
+        <div>
+          <div class="muted">Extra Barba MIN</div>
+          <input id="beardMin" type="number" min="0" step="1">
+        </div>
+        <div>
+          <div class="muted">Extra Barba MAX</div>
+          <input id="beardMax" type="number" min="0" step="1">
+        </div>
+      </div>
+
+      <div class="grid2" style="margin-top:10px;">
+        <div>
+          <div class="muted">Extra Sellado MIN</div>
+          <input id="thermMin" type="number" min="0" step="1">
+        </div>
+        <div>
+          <div class="muted">Extra Sellado MAX</div>
+          <input id="thermMax" type="number" min="0" step="1">
+        </div>
+      </div>
+
+      <div class="row">
+        <button class="btn" id="avgBtn" value="noop">Promedio automático</button>
+      </div>
+
+      <h4>Color (fases)</h4>
+      <div class="muted">Activo = ocupás tiempo de trabajo. Espera = tiempo muerto (podés cortar).</div>
+      <div class="grid2">
+        <div><div class="muted">Aplicar (activo)</div><input id="colApply" type="number" min="0" step="1"></div>
+        <div><div class="muted">Espera 1</div><input id="colWait1" type="number" min="0" step="1"></div>
+      </div>
+      <div class="grid2" style="margin-top:10px;">
+        <div><div class="muted">Cambiar producto (activo)</div><input id="colChange" type="number" min="0" step="1"></div>
+        <div><div class="muted">Espera 2</div><input id="colWait2" type="number" min="0" step="1"></div>
+      </div>
+      <div class="grid2" style="margin-top:10px;">
+        <div><div class="muted">Matizar/Tinte (activo)</div><input id="colTone" type="number" min="0" step="1"></div>
+        <div><div class="muted">Lavado final (activo)</div><input id="colWash" type="number" min="0" step="1"></div>
+      </div>
+
+      <h4>Permanente (fases)</h4>
+      <div class="grid2">
+        <div><div class="muted">Ruleros/beauty (activo)</div><input id="perRoll" type="number" min="0" step="1"></div>
+        <div><div class="muted">Espera producto</div><input id="perWait1" type="number" min="0" step="1"></div>
+      </div>
+      <div class="grid2" style="margin-top:10px;">
+        <div><div class="muted">Neutralizante 1 (activo)</div><input id="perNeut1A" type="number" min="0" step="1"></div>
+        <div><div class="muted">Espera neut 1</div><input id="perNeut1W" type="number" min="0" step="1"></div>
+      </div>
+      <div class="grid2" style="margin-top:10px;">
+        <div><div class="muted">Neutralizante 2 (activo)</div><input id="perNeut2A" type="number" min="0" step="1"></div>
+        <div><div class="muted">Espera neut 2</div><input id="perNeut2W" type="number" min="0" step="1"></div>
+      </div>
+      <div class="grid2" style="margin-top:10px;">
+        <div><div class="muted">Lavado final (activo)</div><input id="perWash" type="number" min="0" step="1"></div>
+        <div><div class="muted">—</div><input disabled value="El corte se suma aparte"></div>
+      </div>
+
+      <div class="row">
+        <button class="btn" value="cancel">Cerrar</button>
+        <button class="btn btnBlue" value="ok" id="saveSettings">Guardar</button>
+      </div>
+
+      <div class="smallNote">
+        Auto (aprende): ajusta tus promedios con los “Finalizar”. Si querés controlar todo, desactivá Auto.
       </div>
     </form>
   </dialog>
@@ -495,32 +639,65 @@ const nowMin = () => { const d=new Date(); return d.getHours()*60+d.getMinutes()
 const fromMin = (m) => { m=((m%1440)+1440)%1440; return pad(Math.floor(m/60))+':'+pad(m%60); }
 const toMin = (hhmm) => { const [h,m]=hhmm.split(':').map(Number); return h*60+m; }
 
-const LS='turnos_minimal_v4';
+const LS='turnos_minimal_v5';
 const load=()=>{ try{return JSON.parse(localStorage.getItem(LS))||null}catch{return null} };
 const save=(s)=>localStorage.setItem(LS, JSON.stringify(s));
+
+function vibrate(ms){ try{ if(navigator.vibrate) navigator.vibrate(ms);}catch{} }
+
+/* ===== Servicios ===== */
+const services = [
+  { id:'cut', label:'Corte' },
+  { id:'cutbeard', label:'Corte + Barba' },
+  { id:'cutthermal', label:'Corte + Sellado térmico' },
+  { id:'cutbeardthermal', label:'Corte + Barba + Sellado térmico' },
+  { id:'color', label:'Color' },
+  { id:'perm', label:'Permanente' }
+];
+const svcLabel = Object.fromEntries(services.map(s=>[s.id,s.label]));
 
 /* ===== Estado ===== */
 const defaultState={
   cfg:{
     shiftEnd:'22:00',
-    hardOver:10,  // como máximo aceptar hasta 22:10
-    buffer:12     // margen semáforo
+    hardOver:10,
+    buffer:12,
+    phasesEnabled:true,
+    autoLearn:true
   },
-  seq:1,
-  current:null, // {id, startedAtMin, activeMin, lastResumeMin, service}
-  queue:[],     // [{id, service}]
+  // Foreground: el “trabajo actual” (corte o fase activa)
+  current:null, // { kind:'service', service, startedAtMin, activeMin, lastResumeMin, remainingOverride? }
+
+  // Corte pausado por fase (cuando suena un “paso”)
+  pausedCut:null, // { service, remainingMin }
+
+  // Cola (siempre son servicios “de silla” como corte/cutbeard/thermal… o incluso color/perm si lo agregás como turno)
+  queue:[], // [{id, service}]
+
+  // Trabajo por fases en background (Color o Permanente)
+  bg:null,
+  // bg = { type:'color'|'perm', phaseIndex, phaseEndsAtMin, phases:[{name, kind:'active'|'wait', minutes}], startedAtMin, awaiting:false }
+
   log:[],
-  learning:{
-    cutAvg:38,
-    beardExtra:18,
-    thermalExtra:22,
-    // Conservadores (por ahora NO usan tiempos muertos):
-    // Color: depende mucho; acá lo ponemos alto a propósito.
-    colorBlock:210,
-    // Permanente: ~60 aplicar + 50 espera + 30 neutralizado/esperas + 10 lavados + corte(38) ~= ~188
-    permBlock:190
+  seq:1,
+
+  // Config de tiempos (min/max) y valores actuales
+  times:{
+    cut:{ min:35, max:50, avg:42 },
+    beard:{ min:15, max:20, avg:18 },
+    thermal:{ min:15, max:25, avg:22 },
+
+    // Fases Color (min)
+    colorPhases:{
+      apply:12, wait1:45, change:12, wait2:45, tone:12, wash:8
+    },
+    // Fases Permanente (min)
+    permPhases:{
+      roll:60, wait1:45, neut1A:5, neut1W:15, neut2A:5, neut2W:15, wash:8
+    }
   }
 };
+
 let state = load() || structuredClone(defaultState);
 
 /* ===== UI refs ===== */
@@ -530,6 +707,7 @@ const elEtaExplain=document.getElementById('etaExplain');
 const elStatusText=document.getElementById('statusText');
 const elDot=document.getElementById('dot');
 const elStatusLine=document.getElementById('statusLine');
+const bgAlert=document.getElementById('bgAlert');
 
 const mainBtn=document.getElementById('mainBtn');
 const actionText=document.getElementById('actionText');
@@ -544,6 +722,7 @@ const qList=document.getElementById('qList');
 
 const undoBtn=document.getElementById('undoBtn');
 const logBtn=document.getElementById('logBtn');
+const settingsBtn=document.getElementById('settingsBtn');
 
 const startDlg=document.getElementById('startDlg');
 const startService=document.getElementById('startService');
@@ -556,10 +735,43 @@ const waitDlg=document.getElementById('waitDlg');
 const waitInfo=document.getElementById('waitInfo');
 const waitService=document.getElementById('waitService');
 const waitHint=document.getElementById('waitHint');
-const waitOkBtn=document.getElementById('waitOkBtn');
 
 const overDlg=document.getElementById('overDlg');
 const overText=document.getElementById('overText');
+
+const phaseDlg=document.getElementById('phaseDlg');
+const phaseTitle=document.getElementById('phaseTitle');
+const phaseBody=document.getElementById('phaseBody');
+
+const settingsDlg=document.getElementById('settingsDlg');
+const cfgEnd=document.getElementById('cfgEnd');
+const cfgHard=document.getElementById('cfgHard');
+const cfgBuf=document.getElementById('cfgBuf');
+const cfgPhases=document.getElementById('cfgPhases');
+const autoLearn=document.getElementById('autoLearn');
+
+const cutMin=document.getElementById('cutMin');
+const cutMax=document.getElementById('cutMax');
+const beardMin=document.getElementById('beardMin');
+const beardMax=document.getElementById('beardMax');
+const thermMin=document.getElementById('thermMin');
+const thermMax=document.getElementById('thermMax');
+const avgBtn=document.getElementById('avgBtn');
+
+const colApply=document.getElementById('colApply');
+const colWait1=document.getElementById('colWait1');
+const colChange=document.getElementById('colChange');
+const colWait2=document.getElementById('colWait2');
+const colTone=document.getElementById('colTone');
+const colWash=document.getElementById('colWash');
+
+const perRoll=document.getElementById('perRoll');
+const perWait1=document.getElementById('perWait1');
+const perNeut1A=document.getElementById('perNeut1A');
+const perNeut1W=document.getElementById('perNeut1W');
+const perNeut2A=document.getElementById('perNeut2A');
+const perNeut2W=document.getElementById('perNeut2W');
+const perWash=document.getElementById('perWash');
 
 const logDlg=document.getElementById('logDlg');
 const logSummary=document.getElementById('logSummary');
@@ -567,33 +779,36 @@ const logList=document.getElementById('logList');
 const copyBtn=document.getElementById('copyBtn');
 const clearBtn=document.getElementById('clearBtn');
 
-function vibrate(ms){ try{ if(navigator.vibrate) navigator.vibrate(ms);}catch{} }
+/* ===== Selects (servicios) ===== */
+function fillServiceSelect(sel){
+  sel.innerHTML = services.map(s=>`<option value="${s.id}">${s.label}</option>`).join('');
+}
+fillServiceSelect(startService);
+fillServiceSelect(finishService);
+fillServiceSelect(waitService);
 
-/* ===== Servicios ===== */
-const svcLabel = {
-  cut: 'Corte',
-  cutbeard: 'Corte + Barba',
-  cutthermal: 'Corte + Sellado térmico',
-  cutbeardthermal: 'Corte + Barba + Sellado térmico',
-  color: 'Color',
-  perm: 'Permanente'
-};
+/* ===== Estimaciones ===== */
+function clamp(n,min,max){ return Math.max(min, Math.min(max, n)); }
 
 function estFor(service){
-  const L = state.learning;
-  const base = L.cutAvg;
-  switch(service){
-    case 'cut': return Math.round(base);
-    case 'cutbeard': return Math.round(base + L.beardExtra);
-    case 'cutthermal': return Math.round(base + L.thermalExtra);
-    case 'cutbeardthermal': return Math.round(base + L.beardExtra + L.thermalExtra);
-    case 'color': return Math.round(L.colorBlock);
-    case 'perm': return Math.round(L.permBlock);
-    default: return Math.round(base);
+  const t = state.times;
+  if(service==='cut') return Math.round(t.cut.avg);
+  if(service==='cutbeard') return Math.round(t.cut.avg + t.beard.avg);
+  if(service==='cutthermal') return Math.round(t.cut.avg + t.thermal.avg);
+  if(service==='cutbeardthermal') return Math.round(t.cut.avg + t.beard.avg + t.thermal.avg);
+
+  // Si no hay fases, color/perm se tratan como bloque “conservador”
+  if(service==='color'){
+    const p=t.colorPhases;
+    return p.apply + p.wait1 + p.change + p.wait2 + p.tone + p.wash + Math.round(t.cut.avg);
   }
+  if(service==='perm'){
+    const p=t.permPhases;
+    return p.roll + p.wait1 + p.neut1A + p.neut1W + p.neut2A + p.neut2W + p.wash + Math.round(t.cut.avg);
+  }
+  return Math.round(t.cut.avg);
 }
 
-/* ===== Cliente actual ===== */
 function currentActiveMin(){
   if(!state.current) return 0;
   const now=nowMin();
@@ -601,38 +816,233 @@ function currentActiveMin(){
 }
 function currentRemainingMin(){
   if(!state.current) return 0;
+  if(state.current.remainingOverride != null) return Math.max(1, state.current.remainingOverride - currentActiveMin());
   const est = estFor(state.current.service);
   return Math.max(1, est - currentActiveMin());
 }
 
-/* ===== Construir schedule (inicio/fin de cada turno) ===== */
-function buildSchedule(){
-  const now = nowMin();
-  let t = now;
-  const rows = [];
+/* ===== Fases (Color / Permanente) ===== */
+function buildPhasesFor(type){
+  const t=state.times;
+  if(type==='color'){
+    const p=t.colorPhases;
+    return [
+      { name:'Aplicar decoloración', kind:'active', minutes: p.apply },
+      { name:'Esperar decoloración 1', kind:'wait', minutes: p.wait1 },
+      { name:'Cambiar producto', kind:'active', minutes: p.change },
+      { name:'Esperar decoloración 2', kind:'wait', minutes: p.wait2 },
+      { name:'Matizar / tinte', kind:'active', minutes: p.tone },
+      { name:'Lavado final', kind:'active', minutes: p.wash },
+      { name:'Corte final', kind:'active', minutes: Math.round(t.cut.avg) }
+    ];
+  }
+  if(type==='perm'){
+    const p=t.permPhases;
+    return [
+      { name:'Colocar ruleros', kind:'active', minutes: p.roll },
+      { name:'Esperar producto', kind:'wait', minutes: p.wait1 },
+      { name:'Neutralizante 1', kind:'active', minutes: p.neut1A },
+      { name:'Esperar neutralizante 1', kind:'wait', minutes: p.neut1W },
+      { name:'Neutralizante 2', kind:'active', minutes: p.neut2A },
+      { name:'Esperar neutralizante 2', kind:'wait', minutes: p.neut2W },
+      { name:'Lavado final', kind:'active', minutes: p.wash },
+      { name:'Corte final', kind:'active', minutes: Math.round(t.cut.avg) }
+    ];
+  }
+  return [];
+}
 
-  if(state.current){
-    const rem = currentRemainingMin();
-    rows.push({ kind:'current', service: state.current.service, start: state.current.startedAtMin, end: now + rem });
-    t = now + rem;
+function startBg(type){
+  const phases = buildPhasesFor(type);
+  const now = nowMin();
+  state.bg = {
+    type,
+    phases,
+    phaseIndex: 0,
+    phaseEndsAtMin: now + phases[0].minutes,
+    startedAtMin: now,
+    awaiting: false
+  };
+
+  // Primera fase activa: la hacemos como “current” para que corra el reloj del botón grande
+  state.current = {
+    kind:'service',
+    service: type==='color' ? 'color' : 'perm',
+    startedAtMin: now,
+    activeMin: 0,
+    lastResumeMin: now,
+    remainingOverride: phases[0].minutes // solo dura lo de esa fase
+  };
+}
+
+function bgCurrentPhase(){
+  if(!state.bg) return null;
+  return state.bg.phases[state.bg.phaseIndex] || null;
+}
+
+function advanceBgToNextPhase(){
+  if(!state.bg) return;
+  state.bg.phaseIndex++;
+  const ph = bgCurrentPhase();
+  if(!ph){
+    // terminado
+    state.bg = null;
+    return;
   }
-  for(const item of state.queue){
-    const dur = estFor(item.service);
-    const start = t;
-    const end = t + dur;
-    rows.push({ kind:'queue', service: item.service, start, end });
-    t = end;
+  const now = nowMin();
+  state.bg.phaseEndsAtMin = now + ph.minutes;
+  state.bg.awaiting = false;
+
+  if(ph.kind==='active'){
+    // si hay corte corriendo, lo pausamos
+    if(state.current && state.current.kind==='cut'){
+      const rem = currentRemainingMin();
+      state.pausedCut = { service: state.current.service, remainingMin: rem };
+      state.current = null;
+    }
+
+    // arrancamos fase activa como current override
+    state.current = {
+      kind:'service',
+      service: state.bg.type==='color' ? 'color' : 'perm',
+      startedAtMin: now,
+      activeMin: 0,
+      lastResumeMin: now,
+      remainingOverride: ph.minutes
+    };
+  } else {
+    // fase de espera: dejamos libre (si había corte pausado, se reanuda automáticamente)
+    if(!state.current && state.pausedCut){
+      const c = state.pausedCut;
+      state.pausedCut = null;
+      startCutFromPaused(c.service, c.remainingMin);
+    }
+    // y si no hay current, queda listo para iniciar cortes
   }
-  return rows;
+}
+
+function startCutFromPaused(service, remainingMin){
+  const now=nowMin();
+  state.current = {
+    kind:'cut',
+    service,
+    startedAtMin: now,
+    activeMin: 0,
+    lastResumeMin: now,
+    remainingOverride: remainingMin
+  };
+}
+
+/* ===== Scheduler con tiempos muertos =====
+   - Si hay bg en fase WAIT, se pueden meter cortes.
+   - Si se vence una WAIT, dispara un “paso” (modal) y pausa el corte si hacía falta.
+*/
+let phaseModalOpen = false;
+
+function tickBg(){
+  if(!state.bg) return;
+
+  const ph = bgCurrentPhase();
+  if(!ph) return;
+
+  const now = nowMin();
+  const remaining = state.bg.phaseEndsAtMin - now;
+
+  // Alertas: cuando quedan <= 3 min en espera
+  if(ph.kind==='wait'){
+    if(remaining <= 3 && remaining > 0){
+      bgAlert.style.display = 'block';
+      bgAlert.innerHTML = `<strong>${svcLabel[state.bg.type]}</strong>: en ${remaining} min hay que <strong>hacer</strong> “${ph.name.replace('Esperar ','').replace('decoloración','cambio').trim()}”.`;
+    }
+    if(remaining <= 0 && !state.bg.awaiting && !phaseModalOpen){
+      // terminó la espera -> pedir que hagas el paso siguiente (si el próximo es activo)
+      state.bg.awaiting = true;
+      const next = state.bg.phases[state.bg.phaseIndex + 1];
+      if(next && next.kind==='active'){
+        phaseModalOpen = true;
+        vibrate(200);
+        phaseTitle.textContent = `${svcLabel[state.bg.type]} · Paso`;
+        phaseBody.textContent = `Es hora de: “${next.name}” (${next.minutes} min).`;
+        phaseDlg.showModal();
+      } else {
+        // si el próximo también fuese wait (raro), avanzamos directo
+        advanceBgToNextPhase();
+      }
+    }
+  } else {
+    // activo
+    bgAlert.style.display = 'block';
+    bgAlert.innerHTML = `<strong>${svcLabel[state.bg.type]}</strong>: haciendo “${ph.name}” · termina ${fromMin(state.bg.phaseEndsAtMin)}.`;
+    if(remaining <= 0){
+      // terminó fase activa, pasar a la próxima automáticamente
+      advanceBgToNextPhase();
+    }
+  }
+
+  if(!state.bg) bgAlert.style.display = 'none';
+}
+
+phaseDlg.addEventListener('close', () => {
+  phaseModalOpen = false;
+  if(phaseDlg.returnValue !== 'ok'){
+    // si puso "Ahora no", lo volvemos a avisar en 1 minuto aprox
+    if(state.bg) state.bg.awaiting = false;
+    return;
+  }
+  // confirmo hacer el paso => avanzar a fase activa
+  advanceBgToNextPhase();
+});
+
+/* ===== Semáforo y ETA (considera bg) =====
+   ETA calcula:
+   - tiempo restante del current
+   - cola, pero si hay bg en espera/activo, respeta los cortes pausables.
+   Simplificación: para ETA, asumimos que:
+   - los cortes se pueden pausar durante “activos” de bg (como implementamos),
+     entonces ETA es: suma de duraciones reales (bg fases + cortes).
+*/
+function totalRemainingBgMin(){
+  if(!state.bg) return 0;
+  const now = nowMin();
+  let total = Math.max(0, state.bg.phaseEndsAtMin - now);
+  for(let i=state.bg.phaseIndex+1;i<state.bg.phases.length;i++){
+    total += state.bg.phases[i].minutes;
+  }
+  return total;
 }
 
 function etaFinishMin(){
-  const sched = buildSchedule();
-  if(!sched.length) return nowMin();
-  return sched[sched.length - 1].end;
+  const now=nowMin();
+
+  // tiempo restante del current (si existe)
+  let t = now;
+  if(state.current){
+    t += currentRemainingMin();
+  }
+
+  // tiempo restante bg (si no estamos ya corriendo parte de bg como current override)
+  // Nota: si current es fase activa (color/perm), ya está incluido en currentRemainingMin, pero igual sumamos todo bg restante (incluye waits y siguientes)
+  // Para no doble contar, sumamos bg restante completo pero restamos lo que ya está en currentOverride si corresponde.
+  let bgRem = totalRemainingBgMin();
+  if(state.bg && state.current && state.current.remainingOverride != null){
+    // el override corresponde al tiempo restante de la fase actual dentro de bg
+    // bgRem ya incluye esa fase actual remanente, pero current ya lo sumó -> restamos esa parte
+    const phRem = Math.max(0, state.bg.phaseEndsAtMin - now);
+    bgRem = Math.max(0, bgRem - phRem);
+  }
+  t += bgRem;
+
+  // cola
+  for(const q of state.queue){
+    t += estFor(q.service);
+  }
+
+  // corte pausado
+  if(state.pausedCut) t += state.pausedCut.remainingMin;
+
+  return t;
 }
 
-/* ===== Semáforo ===== */
 function statusFor(eta){
   const end=toMin(state.cfg.shiftEnd);
   const hard=end + state.cfg.hardOver;
@@ -644,7 +1054,7 @@ function statusFor(eta){
   return {label:'ROJO', color:'var(--red)', explain:`No entra más. Con margen: ${fromMin(etaBuf)}.`};
 }
 
-/* ===== UI cola ===== */
+/* ===== Cola UI (muestra horas aproximadas) ===== */
 function personSvg(){
   return `
   <svg class="person" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -653,6 +1063,35 @@ function personSvg(){
     <path d="M4.6 20.6c.9-4 4-6.2 7.4-6.2s6.5 2.2 7.4 6.2"
       stroke="rgba(78,166,255,.95)" stroke-width="1.6" stroke-linecap="round"/>
   </svg>`;
+}
+
+function estimateStartEndForQueue(){
+  const now=nowMin();
+  let cursor = now;
+
+  // si hay current, se empieza después
+  if(state.current) cursor += currentRemainingMin();
+
+  // si hay bg, cursor debe “convivir” con bg. Para mostrar simple, sumamos bg restante total (conservador)
+  // (como vos querés orden, esto te muestra una hora segura)
+  let bgRem = totalRemainingBgMin();
+  if(state.bg && state.current && state.current.remainingOverride != null){
+    const phRem = Math.max(0, state.bg.phaseEndsAtMin - now);
+    bgRem = Math.max(0, bgRem - phRem);
+  }
+  cursor += bgRem;
+
+  // si hay corte pausado, va antes de la cola
+  if(state.pausedCut) cursor += state.pausedCut.remainingMin;
+
+  const items=[];
+  for(const q of state.queue){
+    const start=cursor;
+    const end=start + estFor(q.service);
+    items.push({service:q.service, start, end});
+    cursor=end;
+  }
+  return items;
 }
 
 function renderQueue(){
@@ -666,9 +1105,9 @@ function renderQueue(){
   }
   qText.textContent = `${n} en espera`;
 
-  const sched = buildSchedule().filter(x=>x.kind==='queue');
+  const items = estimateStartEndForQueue();
   qList.innerHTML = '';
-  for(const s of sched){
+  for(const s of items){
     const div=document.createElement('div');
     div.className='qItem';
     div.innerHTML = `<strong>${svcLabel[s.service]}</strong>
@@ -689,7 +1128,7 @@ function renderLog(){
   const items = state.log || [];
   const total = items.length;
   const totalMin = items.reduce((a,x)=>a+(x.durationMin||0),0);
-  logSummary.textContent = `${total} servicios · ${totalMin} min activos`;
+  logSummary.textContent = `${total} servicios · ${totalMin} min`;
 
   logList.innerHTML = '';
   if(!items.length){
@@ -718,6 +1157,9 @@ function render(){
   const now=nowMin();
   elNow.textContent = fromMin(now);
 
+  // bg tick (alertas y avance)
+  tickBg();
+
   renderQueue();
 
   const eta=etaFinishMin();
@@ -729,33 +1171,43 @@ function render(){
   elDot.style.boxShadow = `0 0 18px ${st.color}`;
   elEtaExplain.textContent = st.explain;
 
+  // texto de estado
+  const bgTxt = state.bg ? ` · ${svcLabel[state.bg.type]} (${bgCurrentPhase()?.kind||''})` : '';
+  const pausedTxt = state.pausedCut ? ` · Corte pausado (${state.pausedCut.remainingMin}m)` : '';
+
   if(!state.current){
     actionText.textContent = 'INICIAR';
     countdown.textContent = '—';
-    subText.textContent = state.queue.length
-      ? `Hay ${state.queue.length} en espera.`
-      : 'Tocá para arrancar.';
+    subText.textContent = state.queue.length ? `Hay ${state.queue.length} en espera.` : 'Tocá para arrancar.';
     setRingProgress(0, false);
-    elStatusLine.textContent = 'Listo.';
+    elStatusLine.textContent = `Libre${bgTxt}${pausedTxt}`;
   } else {
     actionText.textContent = 'FINALIZAR';
     const rem=currentRemainingMin();
     countdown.textContent = `${rem}m`;
     const fin = now + rem;
-    subText.textContent = `Termina aprox ${fromMin(fin)} · ${svcLabel[state.current.service]}`;
-    const est = estFor(state.current.service);
+
+    const label = svcLabel[state.current.service] || state.current.service;
+    subText.textContent = `Termina aprox ${fromMin(fin)} · ${label}`;
+    const est = state.current.remainingOverride != null ? state.current.remainingOverride : estFor(state.current.service);
     const done = currentActiveMin();
     setRingProgress(done / Math.max(1, est), true);
-    elStatusLine.textContent = `En curso · Inicio ${fromMin(state.current.startedAtMin)} · Activo ${done}m`;
+
+    elStatusLine.textContent = `En curso${bgTxt}${pausedTxt}`;
   }
 
   undoBtn.disabled = state.queue.length===0;
   undoBtn.style.opacity = undoBtn.disabled ? 0.45 : 1;
 
+  // Si no hay bg, esconder alerta
+  if(!state.bg){
+    bgAlert.style.display = 'none';
+  }
+
   save(state);
 }
 
-/* ===== Acciones ===== */
+/* ===== Acciones principales ===== */
 mainBtn.addEventListener('click', () => {
   if(!state.current){
     startService.value = 'cut';
@@ -772,13 +1224,23 @@ startDlg.addEventListener('close', () => {
   if(startDlg.returnValue!=='ok') return;
 
   const service = startService.value || 'cut';
+
+  // Si el servicio es color/perm y están activadas fases -> arrancar bg
+  if(state.cfg.phasesEnabled && (service==='color' || service==='perm')){
+    startBg(service==='color' ? 'color' : 'perm');
+    vibrate(100);
+    render();
+    return;
+  }
+
+  // Si había un corte pausado y arrancás otro, lo dejamos como “pausado” (no lo pisamos)
   const now=nowMin();
   state.current = {
-    id: state.seq++,
+    kind:'cut',
+    service,
     startedAtMin: now,
     activeMin: 0,
-    lastResumeMin: now,
-    service
+    lastResumeMin: now
   };
   vibrate(60);
   render();
@@ -791,52 +1253,87 @@ finishDlg.addEventListener('close', () => {
   const done = Math.max(1, currentActiveMin());
   const service = finishService.value || state.current.service || 'cut';
 
-  // Aprendizaje simple SOLO en corte y corte+barba (lo demás lo dejamos fijo)
-  const a = 0.22;
-  if(service==='cut'){
-    state.learning.cutAvg = state.learning.cutAvg*(1-a) + done*a;
-  } else if(service==='cutbeard'){
-    const baseObs = Math.max(10, done - state.learning.beardExtra);
-    state.learning.cutAvg = state.learning.cutAvg*(1-a) + baseObs*a;
-    const extraObs = Math.max(5, done - state.learning.cutAvg);
-    state.learning.beardExtra = state.learning.beardExtra*(1-a) + extraObs*a;
+  // Aprendizaje: si está en auto
+  if(state.cfg.autoLearn){
+    // Recalcula promedios según min/max (EMA dentro del rango)
+    const a=0.22;
+    const t=state.times;
+
+    // Solo “corte” base se aprende de servicios de corte (incluye todos los que contengan corte)
+    // Para que no se vuelva loco con color/perm, esos NO enseñan el corte base acá.
+    if(service==='cut'){
+      const obs = clamp(done, t.cut.min, t.cut.max);
+      t.cut.avg = (1-a)*t.cut.avg + a*obs;
+    } else if(service==='cutbeard'){
+      // corte base
+      const baseObs = clamp(done - t.beard.avg, t.cut.min, t.cut.max);
+      t.cut.avg = (1-a)*t.cut.avg + a*baseObs;
+
+      // barba extra
+      const extraObs = clamp(done - t.cut.avg, t.beard.min, t.beard.max);
+      t.beard.avg = (1-a)*t.beard.avg + a*extraObs;
+    } else if(service==='cutthermal'){
+      const baseObs = clamp(done - t.thermal.avg, t.cut.min, t.cut.max);
+      t.cut.avg = (1-a)*t.cut.avg + a*baseObs;
+
+      const extraObs = clamp(done - t.cut.avg, t.thermal.min, t.thermal.max);
+      t.thermal.avg = (1-a)*t.thermal.avg + a*extraObs;
+    } else if(service==='cutbeardthermal'){
+      // aproximación: reparte extras
+      const baseObs = clamp(done - t.beard.avg - t.thermal.avg, t.cut.min, t.cut.max);
+      t.cut.avg = (1-a)*t.cut.avg + a*baseObs;
+
+      const beardObs = clamp((done - t.cut.avg) * 0.45, t.beard.min, t.beard.max);
+      const thermObs = clamp((done - t.cut.avg) * 0.55, t.thermal.min, t.thermal.max);
+      t.beard.avg = (1-a)*t.beard.avg + a*beardObs;
+      t.thermal.avg = (1-a)*t.thermal.avg + a*thermObs;
+    }
   }
 
   // Registro
   const startMin = state.current.startedAtMin;
   const endMin = nowMin();
-  state.log.push({ id: state.current.id, service, startMin, endMin, durationMin: done });
+  state.log.push({ id: state.seq++, service, startMin, endMin, durationMin: done });
 
   state.current = null;
   vibrate(80);
+
+  // Si había corte pausado y quedaste libre, se reanuda automáticamente
+  if(!state.current && state.pausedCut){
+    const c=state.pausedCut;
+    state.pausedCut=null;
+    startCutFromPaused(c.service, c.remainingMin);
+  }
+
   render();
 });
 
-/* ===== ESPERA + confirmación si pasa de las 22 ===== */
+/* ===== ESPERA + confirmación cierre ===== */
 let pendingAdd = null;
 
-function projectedStartEndForNew(service){
-  const sched = buildSchedule();
-  const lastEnd = sched.length ? sched[sched.length-1].end : nowMin();
-  const dur = estFor(service);
-  return { start:lastEnd, end:lastEnd + dur, dur };
+function projectedEndIfAdd(service){
+  // Usamos ETA actual + duración del nuevo servicio (conservador)
+  const start = etaFinishMin();
+  const end = start + estFor(service);
+  return {start, end};
 }
 
 waitBtn.addEventListener('click', () => {
+  const now=nowMin();
   const rem = state.current ? currentRemainingMin() : 0;
-  const fin = state.current ? (nowMin() + rem) : nowMin();
+  const fin = state.current ? (now + rem) : now;
   waitInfo.textContent = state.current
     ? `Te quedan ~${rem} min. Termina aprox ${fromMin(fin)}.`
     : `No hay corte activo. Esto agrega a la cola.`;
 
   waitService.value = 'cut';
-  const p = projectedStartEndForNew(waitService.value);
+  const p = projectedEndIfAdd(waitService.value);
   waitHint.textContent = `Si lo agregás: inicia ${fromMin(p.start)} · sale ${fromMin(p.end)}.`;
   waitDlg.showModal();
 });
 
 waitService.addEventListener('change', () => {
-  const p = projectedStartEndForNew(waitService.value);
+  const p = projectedEndIfAdd(waitService.value);
   waitHint.textContent = `Si lo agregás: inicia ${fromMin(p.start)} · sale ${fromMin(p.end)}.`;
 });
 
@@ -844,7 +1341,7 @@ waitDlg.addEventListener('close', () => {
   if(waitDlg.returnValue!=='ok') return;
 
   const service = waitService.value || 'cut';
-  const p = projectedStartEndForNew(service);
+  const p = projectedEndIfAdd(service);
 
   const end = toMin(state.cfg.shiftEnd);
   if(p.end > end){
@@ -868,8 +1365,6 @@ overDlg.addEventListener('close', () => {
 
   const end = toMin(state.cfg.shiftEnd);
   const hard = end + state.cfg.hardOver;
-
-  // Si se pasa más que 22:10, no lo agregamos (límite duro)
   if(pendingAdd.p.end > hard){
     pendingAdd = null;
     vibrate(120);
@@ -895,7 +1390,6 @@ logBtn.addEventListener('click', () => {
   renderLog();
   logDlg.showModal();
 });
-
 copyBtn.addEventListener('click', async (e) => {
   e.preventDefault();
   const text = logToText();
@@ -909,7 +1403,6 @@ copyBtn.addEventListener('click', async (e) => {
     setTimeout(()=>copyBtn.textContent='Copiar', 900);
   }
 });
-
 clearBtn.addEventListener('click', (e) => {
   e.preventDefault();
   state.log = [];
@@ -918,8 +1411,98 @@ clearBtn.addEventListener('click', (e) => {
   render();
 });
 
-/* Tick */
-setInterval(render, 2500);
+/* ===== Ajustes ===== */
+function openSettings(){
+  cfgEnd.value = state.cfg.shiftEnd;
+  cfgHard.value = state.cfg.hardOver;
+  cfgBuf.value = state.cfg.buffer;
+  cfgPhases.checked = !!state.cfg.phasesEnabled;
+  autoLearn.checked = !!state.cfg.autoLearn;
+
+  cutMin.value = state.times.cut.min;
+  cutMax.value = state.times.cut.max;
+  beardMin.value = state.times.beard.min;
+  beardMax.value = state.times.beard.max;
+  thermMin.value = state.times.thermal.min;
+  thermMax.value = state.times.thermal.max;
+
+  colApply.value = state.times.colorPhases.apply;
+  colWait1.value = state.times.colorPhases.wait1;
+  colChange.value = state.times.colorPhases.change;
+  colWait2.value = state.times.colorPhases.wait2;
+  colTone.value = state.times.colorPhases.tone;
+  colWash.value = state.times.colorPhases.wash;
+
+  perRoll.value = state.times.permPhases.roll;
+  perWait1.value = state.times.permPhases.wait1;
+  perNeut1A.value = state.times.permPhases.neut1A;
+  perNeut1W.value = state.times.permPhases.neut1W;
+  perNeut2A.value = state.times.permPhases.neut2A;
+  perNeut2W.value = state.times.permPhases.neut2W;
+  perWash.value = state.times.permPhases.wash;
+
+  settingsDlg.showModal();
+}
+
+settingsBtn.addEventListener('click', openSettings);
+
+avgBtn.addEventListener('click', (e) => {
+  e.preventDefault();
+  // “mitad” = promedio simple entre min y max
+  state.times.cut.avg = (Number(cutMin.value)+Number(cutMax.value))/2;
+  state.times.beard.avg = (Number(beardMin.value)+Number(beardMax.value))/2;
+  state.times.thermal.avg = (Number(thermMin.value)+Number(thermMax.value))/2;
+  vibrate(60);
+});
+
+settingsDlg.addEventListener('close', () => {
+  if(settingsDlg.returnValue!=='ok') return;
+
+  // guardar
+  state.cfg.shiftEnd = (cfgEnd.value||'22:00').trim();
+  state.cfg.hardOver = Number(cfgHard.value||10);
+  state.cfg.buffer = Number(cfgBuf.value||12);
+  state.cfg.phasesEnabled = !!cfgPhases.checked;
+  state.cfg.autoLearn = !!autoLearn.checked;
+
+  // rangos
+  state.times.cut.min = Number(cutMin.value||35);
+  state.times.cut.max = Number(cutMax.value||50);
+  state.times.beard.min = Number(beardMin.value||15);
+  state.times.beard.max = Number(beardMax.value||20);
+  state.times.thermal.min = Number(thermMin.value||15);
+  state.times.thermal.max = Number(thermMax.value||25);
+
+  // si NO está en auto, el avg lo “fijás” con lo que ya estaba, pero ajustamos por si quedó fuera de rango
+  state.times.cut.avg = clamp(state.times.cut.avg, state.times.cut.min, state.times.cut.max);
+  state.times.beard.avg = clamp(state.times.beard.avg, state.times.beard.min, state.times.beard.max);
+  state.times.thermal.avg = clamp(state.times.thermal.avg, state.times.thermal.min, state.times.thermal.max);
+
+  // fases
+  state.times.colorPhases = {
+    apply:Number(colApply.value||12),
+    wait1:Number(colWait1.value||45),
+    change:Number(colChange.value||12),
+    wait2:Number(colWait2.value||45),
+    tone:Number(colTone.value||12),
+    wash:Number(colWash.value||8)
+  };
+  state.times.permPhases = {
+    roll:Number(perRoll.value||60),
+    wait1:Number(perWait1.value||45),
+    neut1A:Number(perNeut1A.value||5),
+    neut1W:Number(perNeut1W.value||15),
+    neut2A:Number(perNeut2A.value||5),
+    neut2W:Number(perNeut2W.value||15),
+    wash:Number(perWash.value||8)
+  };
+
+  vibrate(80);
+  render();
+});
+
+/* ===== Tick ===== */
+setInterval(render, 2000);
 
 /* Service Worker */
 if('serviceWorker' in navigator){
