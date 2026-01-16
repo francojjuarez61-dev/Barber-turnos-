@@ -121,8 +121,7 @@
       position:absolute;
       inset: 0;
       border-radius: 999px;
-      background:
-        conic-gradient(var(--ringFill) var(--p), rgba(255,255,255,.06) 0);
+      background: conic-gradient(var(--ringFill) var(--p), rgba(255,255,255,.06) 0);
       filter: drop-shadow(0 0 18px rgba(78,166,255,.28));
     }
     .ring::after{
@@ -157,9 +156,7 @@
       position:absolute;
       inset:-1px;
       border-radius: 999px;
-      box-shadow:
-        0 0 0 1px rgba(255,255,255,.05),
-        0 0 30px rgba(78,166,255,.22);
+      box-shadow: 0 0 0 1px rgba(255,255,255,.05), 0 0 30px rgba(78,166,255,.22);
       pointer-events:none;
       opacity: .9;
     }
@@ -266,6 +263,7 @@
       justify-content: space-between;
       align-items:center;
       margin-top: 10px;
+      flex-wrap: wrap;
     }
     .miniBtn{
       flex: 1;
@@ -277,6 +275,7 @@
       font-weight: 1000;
       box-shadow: var(--inset);
       cursor:pointer;
+      min-width: 120px;
     }
     .miniBtnBlue{ border-color: rgba(78,166,255,.35); box-shadow: 0 0 18px rgba(78,166,255,.14), var(--inset); }
     .miniBtnRed{ border-color: rgba(255,78,106,.32); box-shadow: 0 0 18px rgba(255,78,106,.12), var(--inset); }
@@ -339,6 +338,21 @@
       color: rgba(234,240,255,.8);
     }
 
+    .toggleRow{
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+    }
+    .toggleRow label{ font-size: 12px; color: rgba(234,240,255,.9); }
+    .toggleRow input{ width:auto; margin:0; }
+    .smallNote{ font-size: 11px; color: rgba(234,240,255,.68); margin-top: 6px; }
+
     /* Registro */
     .logList{
       margin-top: 10px;
@@ -357,21 +371,6 @@
     }
     .logItem strong{ display:block; font-size: 13px; margin-bottom: 4px; }
     .logItem .muted{ font-size: 12px; color: rgba(234,240,255,.72); }
-
-    .toggleRow{
-      display:flex;
-      align-items:center;
-      justify-content: space-between;
-      gap: 10px;
-      margin-top: 10px;
-      padding: 10px;
-      border-radius: 14px;
-      border: 1px solid rgba(255,255,255,.10);
-      background: rgba(255,255,255,.03);
-    }
-    .toggleRow label{ font-size: 12px; color: rgba(234,240,255,.9); }
-    .toggleRow input{ width:auto; margin:0; }
-    .smallNote{ font-size: 11px; color: rgba(234,240,255,.68); margin-top: 6px; }
   </style>
 </head>
 
@@ -421,23 +420,22 @@
       <button class="miniBtn miniBtnRed" id="undoBtn">DESHACER</button>
       <button class="miniBtn miniBtnBlue" id="logBtn">REGISTRO</button>
       <button class="miniBtn" id="settingsBtn">AJUSTES</button>
+      <button class="miniBtn" id="resetPhasesBtn">RESET FASES</button>
+      <button class="miniBtn miniBtnRed" id="resetAllBtn">RESET TOTAL</button>
     </div>
   </div>
 
-  <!-- Modal: iniciar (solo servicio) -->
+  <!-- Modal: iniciar -->
   <dialog id="startDlg">
     <form method="dialog" class="sheet">
       <h3>Iniciar</h3>
       <div class="muted">Elegí el servicio.</div>
-
       <select id="startService"></select>
-
       <div class="row">
         <button class="btn" value="cancel">Cancelar</button>
         <button class="btn btnBlue" value="ok">Arrancar</button>
       </div>
-
-      <div class="smallNote">Tip: Color/Permanente usan “fases” si activaste el modo en Ajustes.</div>
+      <div class="smallNote">Color/Permanente usan “fases” si activaste el modo en Ajustes.</div>
     </form>
   </dialog>
 
@@ -446,9 +444,7 @@
     <form method="dialog" class="sheet">
       <h3>Finalizar</h3>
       <div class="muted" id="finishInfo">—</div>
-
       <select id="finishService"></select>
-
       <div class="row">
         <button class="btn" value="cancel">Cancelar</button>
         <button class="btn btnRed" value="ok">Guardar</button>
@@ -461,11 +457,8 @@
     <form method="dialog" class="sheet">
       <h3>Espera</h3>
       <div class="muted" id="waitInfo">—</div>
-
       <select id="waitService"></select>
-
       <div class="hintLine" id="waitHint">—</div>
-
       <div class="row">
         <button class="btn" value="cancel">No se queda</button>
         <button class="btn btnBlue" value="ok" id="waitOkBtn">Agregar</button>
@@ -485,7 +478,7 @@
     </form>
   </dialog>
 
-  <!-- Modal: evento de fase (Color/Permanente) -->
+  <!-- Modal: evento de fase -->
   <dialog id="phaseDlg">
     <form method="dialog" class="sheet">
       <h3 id="phaseTitle">Paso</h3>
@@ -503,6 +496,12 @@
     <form method="dialog" class="sheet">
       <h3>Ajustes</h3>
       <div class="muted">Configurá tiempos y modo automático.</div>
+
+      <h4>Notificaciones (opcional)</h4>
+      <div class="muted">En iPhone puede no avisar con pantalla apagada. Igual vibra/avisa al abrir.</div>
+      <div class="row">
+        <button class="btn btnBlue" id="notifBtn" value="noop">Permitir notificaciones</button>
+      </div>
 
       <h4>Horario</h4>
       <div class="grid2">
@@ -573,7 +572,7 @@
       </div>
 
       <h4>Color (fases)</h4>
-      <div class="muted">Activo = ocupás tiempo de trabajo. Espera = tiempo muerto (podés cortar).</div>
+      <div class="muted">Activo = ocupás tiempo. Espera = tiempo muerto.</div>
       <div class="grid2">
         <div><div class="muted">Aplicar (activo)</div><input id="colApply" type="number" min="0" step="1"></div>
         <div><div class="muted">Espera 1</div><input id="colWait1" type="number" min="0" step="1"></div>
@@ -589,7 +588,7 @@
 
       <h4>Permanente (fases)</h4>
       <div class="grid2">
-        <div><div class="muted">Ruleros/beauty (activo)</div><input id="perRoll" type="number" min="0" step="1"></div>
+        <div><div class="muted">Ruleros (activo)</div><input id="perRoll" type="number" min="0" step="1"></div>
         <div><div class="muted">Espera producto</div><input id="perWait1" type="number" min="0" step="1"></div>
       </div>
       <div class="grid2" style="margin-top:10px;">
@@ -611,7 +610,7 @@
       </div>
 
       <div class="smallNote">
-        Auto (aprende): ajusta tus promedios con los “Finalizar”. Si querés controlar todo, desactivá Auto.
+        Auto (aprende): ajusta tus promedios con “Finalizar”. Si querés control total, desactivá Auto.
       </div>
     </form>
   </dialog>
@@ -621,9 +620,7 @@
     <form method="dialog" class="sheet">
       <h3>Registro del día</h3>
       <div class="muted" id="logSummary">—</div>
-
       <div class="logList" id="logList"></div>
-
       <div class="row">
         <button class="btn" value="cancel">Cerrar</button>
         <button class="btn btnBlue" id="copyBtn" value="noop">Copiar</button>
@@ -639,11 +636,22 @@ const nowMin = () => { const d=new Date(); return d.getHours()*60+d.getMinutes()
 const fromMin = (m) => { m=((m%1440)+1440)%1440; return pad(Math.floor(m/60))+':'+pad(m%60); }
 const toMin = (hhmm) => { const [h,m]=hhmm.split(':').map(Number); return h*60+m; }
 
-const LS='turnos_minimal_v5';
+const LS='turnos_minimal_v7';
 const load=()=>{ try{return JSON.parse(localStorage.getItem(LS))||null}catch{return null} };
 const save=(s)=>localStorage.setItem(LS, JSON.stringify(s));
 
 function vibrate(ms){ try{ if(navigator.vibrate) navigator.vibrate(ms);}catch{} }
+function clamp(n,min,max){ return Math.max(min, Math.min(max, n)); }
+
+/* ===== Notificaciones (opcional) ===== */
+function canNotify(){ return ('Notification' in window); }
+function notify(title, body){
+  try{
+    if(canNotify() && Notification.permission === 'granted'){
+      new Notification(title, { body });
+    }
+  }catch{}
+}
 
 /* ===== Servicios ===== */
 const services = [
@@ -665,40 +673,26 @@ const defaultState={
     phasesEnabled:true,
     autoLearn:true
   },
-  // Foreground: el “trabajo actual” (corte o fase activa)
-  current:null, // { kind:'service', service, startedAtMin, activeMin, lastResumeMin, remainingOverride? }
-
-  // Corte pausado por fase (cuando suena un “paso”)
-  pausedCut:null, // { service, remainingMin }
-
-  // Cola (siempre son servicios “de silla” como corte/cutbeard/thermal… o incluso color/perm si lo agregás como turno)
-  queue:[], // [{id, service}]
-
-  // Trabajo por fases en background (Color o Permanente)
+  current:null,
+  pausedCut:null,
+  queue:[],
   bg:null,
-  // bg = { type:'color'|'perm', phaseIndex, phaseEndsAtMin, phases:[{name, kind:'active'|'wait', minutes}], startedAtMin, awaiting:false }
-
   log:[],
   seq:1,
-
-  // Config de tiempos (min/max) y valores actuales
   times:{
     cut:{ min:35, max:50, avg:42 },
     beard:{ min:15, max:20, avg:18 },
     thermal:{ min:15, max:25, avg:22 },
-
-    // Fases Color (min)
-    colorPhases:{
-      apply:12, wait1:45, change:12, wait2:45, tone:12, wash:8
-    },
-    // Fases Permanente (min)
-    permPhases:{
-      roll:60, wait1:45, neut1A:5, neut1W:15, neut2A:5, neut2W:15, wash:8
-    }
+    colorPhases:{ apply:12, wait1:45, change:12, wait2:45, tone:12, wash:8 },
+    permPhases:{ roll:60, wait1:45, neut1A:5, neut1W:15, neut2A:5, neut2W:15, wash:8 }
+  },
+  ui:{
+    lastWarnKey:null,   // evita spam de alertas del corte
+    lastBgKey:null
   }
 };
-
 let state = load() || structuredClone(defaultState);
+if(!state.ui) state.ui = { lastWarnKey:null, lastBgKey:null };
 
 /* ===== UI refs ===== */
 const elNow=document.getElementById('now');
@@ -723,6 +717,8 @@ const qList=document.getElementById('qList');
 const undoBtn=document.getElementById('undoBtn');
 const logBtn=document.getElementById('logBtn');
 const settingsBtn=document.getElementById('settingsBtn');
+const resetPhasesBtn=document.getElementById('resetPhasesBtn');
+const resetAllBtn=document.getElementById('resetAllBtn');
 
 const startDlg=document.getElementById('startDlg');
 const startService=document.getElementById('startService');
@@ -749,6 +745,7 @@ const cfgHard=document.getElementById('cfgHard');
 const cfgBuf=document.getElementById('cfgBuf');
 const cfgPhases=document.getElementById('cfgPhases');
 const autoLearn=document.getElementById('autoLearn');
+const notifBtn=document.getElementById('notifBtn');
 
 const cutMin=document.getElementById('cutMin');
 const cutMax=document.getElementById('cutMax');
@@ -788,8 +785,6 @@ fillServiceSelect(finishService);
 fillServiceSelect(waitService);
 
 /* ===== Estimaciones ===== */
-function clamp(n,min,max){ return Math.max(min, Math.min(max, n)); }
-
 function estFor(service){
   const t = state.times;
   if(service==='cut') return Math.round(t.cut.avg);
@@ -797,7 +792,7 @@ function estFor(service){
   if(service==='cutthermal') return Math.round(t.cut.avg + t.thermal.avg);
   if(service==='cutbeardthermal') return Math.round(t.cut.avg + t.beard.avg + t.thermal.avg);
 
-  // Si no hay fases, color/perm se tratan como bloque “conservador”
+  // sin fases: bloque conservador
   if(service==='color'){
     const p=t.colorPhases;
     return p.apply + p.wait1 + p.change + p.wait2 + p.tone + p.wash + Math.round(t.cut.avg);
@@ -809,16 +804,31 @@ function estFor(service){
   return Math.round(t.cut.avg);
 }
 
+/* ===== Timer robusto (Date.now) ===== */
+function ensureStartedAtMs(){
+  if(state.current && !state.current.startedAtMs){
+    // si viene de una versión vieja
+    state.current.startedAtMs = Date.now();
+  }
+}
 function currentActiveMin(){
   if(!state.current) return 0;
-  const now=nowMin();
-  return state.current.activeMin + Math.max(0, now - (state.current.lastResumeMin ?? now));
+  ensureStartedAtMs();
+  const elapsedMs = Date.now() - state.current.startedAtMs;
+  return Math.max(0, Math.round(elapsedMs / 60000));
+}
+function currentEstMin(){
+  if(!state.current) return 0;
+  return (state.current.remainingOverride != null)
+    ? state.current.remainingOverride
+    : estFor(state.current.service);
 }
 function currentRemainingMin(){
   if(!state.current) return 0;
-  if(state.current.remainingOverride != null) return Math.max(1, state.current.remainingOverride - currentActiveMin());
-  const est = estFor(state.current.service);
-  return Math.max(1, est - currentActiveMin());
+  const elapsed = currentActiveMin();
+  const est = currentEstMin();
+  // puede ser negativo (demora)
+  return Math.round(est - elapsed);
 }
 
 /* ===== Fases (Color / Permanente) ===== */
@@ -833,7 +843,7 @@ function buildPhasesFor(type){
       { name:'Esperar decoloración 2', kind:'wait', minutes: p.wait2 },
       { name:'Matizar / tinte', kind:'active', minutes: p.tone },
       { name:'Lavado final', kind:'active', minutes: p.wash },
-      { name:'Corte final', kind:'active', minutes: Math.round(t.cut.avg) }
+      { name:'Corte final', kind:'active', minutes: Math.round(state.times.cut.avg) }
     ];
   }
   if(type==='perm'){
@@ -846,32 +856,44 @@ function buildPhasesFor(type){
       { name:'Neutralizante 2', kind:'active', minutes: p.neut2A },
       { name:'Esperar neutralizante 2', kind:'wait', minutes: p.neut2W },
       { name:'Lavado final', kind:'active', minutes: p.wash },
-      { name:'Corte final', kind:'active', minutes: Math.round(t.cut.avg) }
+      { name:'Corte final', kind:'active', minutes: Math.round(state.times.cut.avg) }
     ];
   }
   return [];
 }
 
+function startCutFromPaused(service, remainingMin){
+  const nowM=nowMin();
+  state.current = {
+    kind:'cut',
+    service,
+    startedAtMin: nowM,
+    startedAtMs: Date.now(),
+    remainingOverride: remainingMin
+  };
+}
+
 function startBg(type){
   const phases = buildPhasesFor(type);
-  const now = nowMin();
+  const nowM = nowMin();
+  const nowMs = Date.now();
+
   state.bg = {
     type,
     phases,
     phaseIndex: 0,
-    phaseEndsAtMin: now + phases[0].minutes,
-    startedAtMin: now,
+    phaseEndsAtMs: nowMs + phases[0].minutes*60000,
+    startedAtMs: nowMs,
     awaiting: false
   };
 
-  // Primera fase activa: la hacemos como “current” para que corra el reloj del botón grande
+  // Primera fase activa como current override (timer robusto)
   state.current = {
     kind:'service',
     service: type==='color' ? 'color' : 'perm',
-    startedAtMin: now,
-    activeMin: 0,
-    lastResumeMin: now,
-    remainingOverride: phases[0].minutes // solo dura lo de esa fase
+    startedAtMin: nowM,
+    startedAtMs: nowMs,
+    remainingOverride: phases[0].minutes
   };
 }
 
@@ -885,58 +907,38 @@ function advanceBgToNextPhase(){
   state.bg.phaseIndex++;
   const ph = bgCurrentPhase();
   if(!ph){
-    // terminado
     state.bg = null;
     return;
   }
-  const now = nowMin();
-  state.bg.phaseEndsAtMin = now + ph.minutes;
+
+  const nowM = nowMin();
+  const nowMs = Date.now();
+  state.bg.phaseEndsAtMs = nowMs + ph.minutes*60000;
   state.bg.awaiting = false;
 
   if(ph.kind==='active'){
-    // si hay corte corriendo, lo pausamos
     if(state.current && state.current.kind==='cut'){
       const rem = currentRemainingMin();
       state.pausedCut = { service: state.current.service, remainingMin: rem };
       state.current = null;
     }
-
-    // arrancamos fase activa como current override
     state.current = {
       kind:'service',
       service: state.bg.type==='color' ? 'color' : 'perm',
-      startedAtMin: now,
-      activeMin: 0,
-      lastResumeMin: now,
+      startedAtMin: nowM,
+      startedAtMs: nowMs,
       remainingOverride: ph.minutes
     };
   } else {
-    // fase de espera: dejamos libre (si había corte pausado, se reanuda automáticamente)
     if(!state.current && state.pausedCut){
       const c = state.pausedCut;
       state.pausedCut = null;
       startCutFromPaused(c.service, c.remainingMin);
     }
-    // y si no hay current, queda listo para iniciar cortes
   }
 }
 
-function startCutFromPaused(service, remainingMin){
-  const now=nowMin();
-  state.current = {
-    kind:'cut',
-    service,
-    startedAtMin: now,
-    activeMin: 0,
-    lastResumeMin: now,
-    remainingOverride: remainingMin
-  };
-}
-
-/* ===== Scheduler con tiempos muertos =====
-   - Si hay bg en fase WAIT, se pueden meter cortes.
-   - Si se vence una WAIT, dispara un “paso” (modal) y pausa el corte si hacía falta.
-*/
+/* ===== Tick BG y alertas ===== */
 let phaseModalOpen = false;
 
 function tickBg(){
@@ -945,66 +947,54 @@ function tickBg(){
   const ph = bgCurrentPhase();
   if(!ph) return;
 
-  const now = nowMin();
-  const remaining = state.bg.phaseEndsAtMin - now;
+  const nowMs = Date.now();
+  const remainingMs = state.bg.phaseEndsAtMs - nowMs;
+  const remainingMin = Math.ceil(remainingMs / 60000);
 
-  // Alertas: cuando quedan <= 3 min en espera
   if(ph.kind==='wait'){
-    if(remaining <= 3 && remaining > 0){
+    if(remainingMin <= 3 && remainingMin > 0){
       bgAlert.style.display = 'block';
-      bgAlert.innerHTML = `<strong>${svcLabel[state.bg.type]}</strong>: en ${remaining} min hay que <strong>hacer</strong> “${ph.name.replace('Esperar ','').replace('decoloración','cambio').trim()}”.`;
+      bgAlert.innerHTML = `<strong>${svcLabel[state.bg.type]}</strong>: en ${remainingMin} min hay que hacer el paso siguiente.`;
     }
-    if(remaining <= 0 && !state.bg.awaiting && !phaseModalOpen){
-      // terminó la espera -> pedir que hagas el paso siguiente (si el próximo es activo)
+    if(remainingMs <= 0 && !state.bg.awaiting && !phaseModalOpen){
       state.bg.awaiting = true;
       const next = state.bg.phases[state.bg.phaseIndex + 1];
       if(next && next.kind==='active'){
         phaseModalOpen = true;
         vibrate(200);
+        notify('Color/Permanente', `Es hora de: ${next.name} (${next.minutes} min)`);
         phaseTitle.textContent = `${svcLabel[state.bg.type]} · Paso`;
         phaseBody.textContent = `Es hora de: “${next.name}” (${next.minutes} min).`;
         phaseDlg.showModal();
       } else {
-        // si el próximo también fuese wait (raro), avanzamos directo
         advanceBgToNextPhase();
       }
     }
   } else {
-    // activo
+    const endDate = new Date(state.bg.phaseEndsAtMs);
+    const fin = endDate.getHours()*60 + endDate.getMinutes();
     bgAlert.style.display = 'block';
-    bgAlert.innerHTML = `<strong>${svcLabel[state.bg.type]}</strong>: haciendo “${ph.name}” · termina ${fromMin(state.bg.phaseEndsAtMin)}.`;
-    if(remaining <= 0){
-      // terminó fase activa, pasar a la próxima automáticamente
+    bgAlert.innerHTML = `<strong>${svcLabel[state.bg.type]}</strong>: haciendo “${ph.name}” · termina ${fromMin(fin)}.`;
+    if(remainingMs <= 0){
       advanceBgToNextPhase();
     }
   }
-
-  if(!state.bg) bgAlert.style.display = 'none';
 }
 
 phaseDlg.addEventListener('close', () => {
   phaseModalOpen = false;
   if(phaseDlg.returnValue !== 'ok'){
-    // si puso "Ahora no", lo volvemos a avisar en 1 minuto aprox
     if(state.bg) state.bg.awaiting = false;
     return;
   }
-  // confirmo hacer el paso => avanzar a fase activa
   advanceBgToNextPhase();
 });
 
-/* ===== Semáforo y ETA (considera bg) =====
-   ETA calcula:
-   - tiempo restante del current
-   - cola, pero si hay bg en espera/activo, respeta los cortes pausables.
-   Simplificación: para ETA, asumimos que:
-   - los cortes se pueden pausar durante “activos” de bg (como implementamos),
-     entonces ETA es: suma de duraciones reales (bg fases + cortes).
-*/
+/* ===== ETA / Semáforo ===== */
 function totalRemainingBgMin(){
   if(!state.bg) return 0;
-  const now = nowMin();
-  let total = Math.max(0, state.bg.phaseEndsAtMin - now);
+  const nowMs = Date.now();
+  let total = Math.max(0, Math.ceil((state.bg.phaseEndsAtMs - nowMs)/60000));
   for(let i=state.bg.phaseIndex+1;i<state.bg.phases.length;i++){
     total += state.bg.phases[i].minutes;
   }
@@ -1012,34 +1002,28 @@ function totalRemainingBgMin(){
 }
 
 function etaFinishMin(){
-  const now=nowMin();
+  const nowM=nowMin();
+  let t = nowM;
 
-  // tiempo restante del current (si existe)
-  let t = now;
   if(state.current){
-    t += currentRemainingMin();
+    const rem = currentRemainingMin();
+    // si ya se pasó, rem es negativo => igual sumamos 0 (eta no debe ir para atrás)
+    t += Math.max(0, rem);
   }
 
-  // tiempo restante bg (si no estamos ya corriendo parte de bg como current override)
-  // Nota: si current es fase activa (color/perm), ya está incluido en currentRemainingMin, pero igual sumamos todo bg restante (incluye waits y siguientes)
-  // Para no doble contar, sumamos bg restante completo pero restamos lo que ya está en currentOverride si corresponde.
+  // bg restante sin doble contar la fase ya contemplada por current override
   let bgRem = totalRemainingBgMin();
   if(state.bg && state.current && state.current.remainingOverride != null){
-    // el override corresponde al tiempo restante de la fase actual dentro de bg
-    // bgRem ya incluye esa fase actual remanente, pero current ya lo sumó -> restamos esa parte
-    const phRem = Math.max(0, state.bg.phaseEndsAtMin - now);
+    const phRem = Math.max(0, Math.ceil((state.bg.phaseEndsAtMs - Date.now())/60000));
     bgRem = Math.max(0, bgRem - phRem);
   }
   t += bgRem;
 
-  // cola
+  if(state.pausedCut) t += Math.max(0, state.pausedCut.remainingMin);
+
   for(const q of state.queue){
     t += estFor(q.service);
   }
-
-  // corte pausado
-  if(state.pausedCut) t += state.pausedCut.remainingMin;
-
   return t;
 }
 
@@ -1054,7 +1038,7 @@ function statusFor(eta){
   return {label:'ROJO', color:'var(--red)', explain:`No entra más. Con margen: ${fromMin(etaBuf)}.`};
 }
 
-/* ===== Cola UI (muestra horas aproximadas) ===== */
+/* ===== Cola UI ===== */
 function personSvg(){
   return `
   <svg class="person" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -1066,30 +1050,14 @@ function personSvg(){
 }
 
 function estimateStartEndForQueue(){
-  const now=nowMin();
-  let cursor = now;
-
-  // si hay current, se empieza después
-  if(state.current) cursor += currentRemainingMin();
-
-  // si hay bg, cursor debe “convivir” con bg. Para mostrar simple, sumamos bg restante total (conservador)
-  // (como vos querés orden, esto te muestra una hora segura)
-  let bgRem = totalRemainingBgMin();
-  if(state.bg && state.current && state.current.remainingOverride != null){
-    const phRem = Math.max(0, state.bg.phaseEndsAtMin - now);
-    bgRem = Math.max(0, bgRem - phRem);
-  }
-  cursor += bgRem;
-
-  // si hay corte pausado, va antes de la cola
-  if(state.pausedCut) cursor += state.pausedCut.remainingMin;
-
+  const baseStart = etaFinishMin();
+  let cursor = baseStart;
   const items=[];
   for(const q of state.queue){
-    const start=cursor;
-    const end=start + estFor(q.service);
-    items.push({service:q.service, start, end});
-    cursor=end;
+    const s=cursor;
+    const e=s + estFor(q.service);
+    items.push({service:q.service, start:s, end:e});
+    cursor=e;
   }
   return items;
 }
@@ -1121,6 +1089,52 @@ function setRingProgress(pct, running){
   const deg = Math.max(0, Math.min(1, pct)) * 360;
   ring.style.setProperty('--p', `${deg}deg`);
   ring.style.setProperty('--ringFill', running ? 'var(--red)' : 'var(--blue)');
+}
+
+/* ===== Alertas del corte (estimado/fin/demora) ===== */
+function checkCutAlerts(){
+  if(!state.current) { state.ui.lastWarnKey = null; return; }
+  // solo para servicios normales; para fases ya tenés phaseDlg/bgAlert
+  if(state.current.service==='color' || state.current.service==='perm') return;
+
+  const rem = currentRemainingMin();
+  const keyBase = String(state.current.startedAtMs || 0);
+
+  // 5 min antes
+  if(rem === 5){
+    const key = keyBase + ':5';
+    if(state.ui.lastWarnKey !== key){
+      state.ui.lastWarnKey = key;
+      vibrate(120);
+      notify('Turnos', 'Te quedan ~5 min del corte');
+      bgAlert.style.display = 'block';
+      bgAlert.innerHTML = `<strong>Alerta</strong>: te quedan ~5 min del estimado.`;
+    }
+  }
+
+  // en 0 (estimado cumplido)
+  if(rem === 0){
+    const key = keyBase + ':0';
+    if(state.ui.lastWarnKey !== key){
+      state.ui.lastWarnKey = key;
+      vibrate(180);
+      notify('Turnos', 'Se cumplió el tiempo estimado');
+      bgAlert.style.display = 'block';
+      bgAlert.innerHTML = `<strong>Alerta</strong>: se cumplió el estimado (0).`;
+    }
+  }
+
+  // primera vez que entra en demora
+  if(rem === -1){
+    const key = keyBase + ':-1';
+    if(state.ui.lastWarnKey !== key){
+      state.ui.lastWarnKey = key;
+      vibrate(220);
+      notify('Turnos', 'Entraste en demora (+min)');
+      bgAlert.style.display = 'block';
+      bgAlert.innerHTML = `<strong>Demora</strong>: empezaste a pasarte del estimado.`;
+    }
+  }
 }
 
 /* ===== Registro ===== */
@@ -1157,8 +1171,8 @@ function render(){
   const now=nowMin();
   elNow.textContent = fromMin(now);
 
-  // bg tick (alertas y avance)
   tickBg();
+  checkCutAlerts();
 
   renderQueue();
 
@@ -1171,7 +1185,6 @@ function render(){
   elDot.style.boxShadow = `0 0 18px ${st.color}`;
   elEtaExplain.textContent = st.explain;
 
-  // texto de estado
   const bgTxt = state.bg ? ` · ${svcLabel[state.bg.type]} (${bgCurrentPhase()?.kind||''})` : '';
   const pausedTxt = state.pausedCut ? ` · Corte pausado (${state.pausedCut.remainingMin}m)` : '';
 
@@ -1184,24 +1197,33 @@ function render(){
   } else {
     actionText.textContent = 'FINALIZAR';
     const rem=currentRemainingMin();
-    countdown.textContent = `${rem}m`;
-    const fin = now + rem;
+
+    // contador: si se pasó -> +Xm
+    if(rem >= 0) countdown.textContent = `${rem}m`;
+    else countdown.textContent = `+${Math.abs(rem)}m`;
 
     const label = svcLabel[state.current.service] || state.current.service;
-    subText.textContent = `Termina aprox ${fromMin(fin)} · ${label}`;
-    const est = state.current.remainingOverride != null ? state.current.remainingOverride : estFor(state.current.service);
+
+    // hora estimada fija (no se corre con la demora)
+    ensureStartedAtMs();
+    const est = currentEstMin();
+    const endMs = state.current.startedAtMs + est*60000;
+    const endDate = new Date(endMs);
+    const fin = endDate.getHours()*60 + endDate.getMinutes();
+
+    subText.textContent = `Estimado ${fromMin(fin)} · ${label}`;
+
     const done = currentActiveMin();
     setRingProgress(done / Math.max(1, est), true);
-
     elStatusLine.textContent = `En curso${bgTxt}${pausedTxt}`;
   }
 
   undoBtn.disabled = state.queue.length===0;
   undoBtn.style.opacity = undoBtn.disabled ? 0.45 : 1;
 
-  // Si no hay bg, esconder alerta
-  if(!state.bg){
-    bgAlert.style.display = 'none';
+  if(!state.bg && (!state.current || (state.current.service!=='color' && state.current.service!=='perm'))){
+    // no escondemos el alert si justo mostró algo de 5/0/+; lo dejamos hasta próximo evento
+    // pero si querés que se limpie solo, avisame y lo hago.
   }
 
   save(state);
@@ -1213,7 +1235,7 @@ mainBtn.addEventListener('click', () => {
     startService.value = 'cut';
     startDlg.showModal();
   } else {
-    const active = currentActiveMin();
+    const active = Math.max(1, currentActiveMin());
     finishInfo.textContent = `Tiempo activo: ${active} min`;
     finishService.value = state.current.service || 'cut';
     finishDlg.showModal();
@@ -1225,7 +1247,6 @@ startDlg.addEventListener('close', () => {
 
   const service = startService.value || 'cut';
 
-  // Si el servicio es color/perm y están activadas fases -> arrancar bg
   if(state.cfg.phasesEnabled && (service==='color' || service==='perm')){
     startBg(service==='color' ? 'color' : 'perm');
     vibrate(100);
@@ -1233,15 +1254,14 @@ startDlg.addEventListener('close', () => {
     return;
   }
 
-  // Si había un corte pausado y arrancás otro, lo dejamos como “pausado” (no lo pisamos)
-  const now=nowMin();
+  const nowM=nowMin();
   state.current = {
     kind:'cut',
     service,
-    startedAtMin: now,
-    activeMin: 0,
-    lastResumeMin: now
+    startedAtMin: nowM,
+    startedAtMs: Date.now()
   };
+  state.ui.lastWarnKey = null;
   vibrate(60);
   render();
 });
@@ -1253,36 +1273,26 @@ finishDlg.addEventListener('close', () => {
   const done = Math.max(1, currentActiveMin());
   const service = finishService.value || state.current.service || 'cut';
 
-  // Aprendizaje: si está en auto
   if(state.cfg.autoLearn){
-    // Recalcula promedios según min/max (EMA dentro del rango)
     const a=0.22;
     const t=state.times;
 
-    // Solo “corte” base se aprende de servicios de corte (incluye todos los que contengan corte)
-    // Para que no se vuelva loco con color/perm, esos NO enseñan el corte base acá.
     if(service==='cut'){
       const obs = clamp(done, t.cut.min, t.cut.max);
       t.cut.avg = (1-a)*t.cut.avg + a*obs;
     } else if(service==='cutbeard'){
-      // corte base
       const baseObs = clamp(done - t.beard.avg, t.cut.min, t.cut.max);
       t.cut.avg = (1-a)*t.cut.avg + a*baseObs;
-
-      // barba extra
       const extraObs = clamp(done - t.cut.avg, t.beard.min, t.beard.max);
       t.beard.avg = (1-a)*t.beard.avg + a*extraObs;
     } else if(service==='cutthermal'){
       const baseObs = clamp(done - t.thermal.avg, t.cut.min, t.cut.max);
       t.cut.avg = (1-a)*t.cut.avg + a*baseObs;
-
       const extraObs = clamp(done - t.cut.avg, t.thermal.min, t.thermal.max);
       t.thermal.avg = (1-a)*t.thermal.avg + a*extraObs;
     } else if(service==='cutbeardthermal'){
-      // aproximación: reparte extras
       const baseObs = clamp(done - t.beard.avg - t.thermal.avg, t.cut.min, t.cut.max);
       t.cut.avg = (1-a)*t.cut.avg + a*baseObs;
-
       const beardObs = clamp((done - t.cut.avg) * 0.45, t.beard.min, t.beard.max);
       const thermObs = clamp((done - t.cut.avg) * 0.55, t.thermal.min, t.thermal.max);
       t.beard.avg = (1-a)*t.beard.avg + a*beardObs;
@@ -1290,15 +1300,14 @@ finishDlg.addEventListener('close', () => {
     }
   }
 
-  // Registro
-  const startMin = state.current.startedAtMin;
+  const startMin = state.current.startedAtMin ?? nowMin();
   const endMin = nowMin();
   state.log.push({ id: state.seq++, service, startMin, endMin, durationMin: done });
 
   state.current = null;
+  state.ui.lastWarnKey = null;
   vibrate(80);
 
-  // Si había corte pausado y quedaste libre, se reanuda automáticamente
   if(!state.current && state.pausedCut){
     const c=state.pausedCut;
     state.pausedCut=null;
@@ -1312,7 +1321,6 @@ finishDlg.addEventListener('close', () => {
 let pendingAdd = null;
 
 function projectedEndIfAdd(service){
-  // Usamos ETA actual + duración del nuevo servicio (conservador)
   const start = etaFinishMin();
   const end = start + estFor(service);
   return {start, end};
@@ -1321,9 +1329,19 @@ function projectedEndIfAdd(service){
 waitBtn.addEventListener('click', () => {
   const now=nowMin();
   const rem = state.current ? currentRemainingMin() : 0;
-  const fin = state.current ? (now + rem) : now;
+
+  let finTxt = '';
+  if(state.current){
+    // fin estimado fijo del actual
+    ensureStartedAtMs();
+    const est = currentEstMin();
+    const endMs = state.current.startedAtMs + est*60000;
+    const d = new Date(endMs);
+    finTxt = fromMin(d.getHours()*60 + d.getMinutes());
+  }
+
   waitInfo.textContent = state.current
-    ? `Te quedan ~${rem} min. Termina aprox ${fromMin(fin)}.`
+    ? `Estimado del actual: ${finTxt}. Te quedan ${rem>=0?rem:('+ '+Math.abs(rem))} min.`
     : `No hay corte activo. Esto agrega a la cola.`;
 
   waitService.value = 'cut';
@@ -1385,7 +1403,7 @@ undoBtn.addEventListener('click', () => {
   render();
 });
 
-/* REGISTRO */
+/* ===== REGISTRO ===== */
 logBtn.addEventListener('click', () => {
   renderLog();
   logDlg.showModal();
@@ -1411,7 +1429,7 @@ clearBtn.addEventListener('click', (e) => {
   render();
 });
 
-/* ===== Ajustes ===== */
+/* ===== AJUSTES ===== */
 function openSettings(){
   cfgEnd.value = state.cfg.shiftEnd;
   cfgHard.value = state.cfg.hardOver;
@@ -1443,12 +1461,30 @@ function openSettings(){
 
   settingsDlg.showModal();
 }
-
 settingsBtn.addEventListener('click', openSettings);
+
+notifBtn.addEventListener('click', async (e) => {
+  e.preventDefault();
+  if(!canNotify()){
+    alert('Este navegador no soporta notificaciones.');
+    return;
+  }
+  try{
+    const res = await Notification.requestPermission();
+    if(res === 'granted'){
+      notify('Turnos', 'Notificaciones activadas');
+      vibrate(100);
+      alert('Listo: notificaciones activadas (si iOS lo permite en segundo plano).');
+    }else{
+      alert('No se activaron las notificaciones.');
+    }
+  }catch{
+    alert('No se pudieron activar.');
+  }
+});
 
 avgBtn.addEventListener('click', (e) => {
   e.preventDefault();
-  // “mitad” = promedio simple entre min y max
   state.times.cut.avg = (Number(cutMin.value)+Number(cutMax.value))/2;
   state.times.beard.avg = (Number(beardMin.value)+Number(beardMax.value))/2;
   state.times.thermal.avg = (Number(thermMin.value)+Number(thermMax.value))/2;
@@ -1458,14 +1494,12 @@ avgBtn.addEventListener('click', (e) => {
 settingsDlg.addEventListener('close', () => {
   if(settingsDlg.returnValue!=='ok') return;
 
-  // guardar
   state.cfg.shiftEnd = (cfgEnd.value||'22:00').trim();
   state.cfg.hardOver = Number(cfgHard.value||10);
   state.cfg.buffer = Number(cfgBuf.value||12);
   state.cfg.phasesEnabled = !!cfgPhases.checked;
   state.cfg.autoLearn = !!autoLearn.checked;
 
-  // rangos
   state.times.cut.min = Number(cutMin.value||35);
   state.times.cut.max = Number(cutMax.value||50);
   state.times.beard.min = Number(beardMin.value||15);
@@ -1473,12 +1507,10 @@ settingsDlg.addEventListener('close', () => {
   state.times.thermal.min = Number(thermMin.value||15);
   state.times.thermal.max = Number(thermMax.value||25);
 
-  // si NO está en auto, el avg lo “fijás” con lo que ya estaba, pero ajustamos por si quedó fuera de rango
   state.times.cut.avg = clamp(state.times.cut.avg, state.times.cut.min, state.times.cut.max);
   state.times.beard.avg = clamp(state.times.beard.avg, state.times.beard.min, state.times.beard.max);
   state.times.thermal.avg = clamp(state.times.thermal.avg, state.times.thermal.min, state.times.thermal.max);
 
-  // fases
   state.times.colorPhases = {
     apply:Number(colApply.value||12),
     wait1:Number(colWait1.value||45),
@@ -1501,8 +1533,63 @@ settingsDlg.addEventListener('close', () => {
   render();
 });
 
-/* ===== Tick ===== */
-setInterval(render, 2000);
+/* ===== RESETS ===== */
+function closeAllOperationalDialogs(){
+  try{ if(phaseDlg.open) phaseDlg.close(); }catch{}
+  try{ if(startDlg.open) startDlg.close(); }catch{}
+  try{ if(finishDlg.open) finishDlg.close(); }catch{}
+  try{ if(waitDlg.open) waitDlg.close(); }catch{}
+  try{ if(overDlg.open) overDlg.close(); }catch{}
+  bgAlert.style.display = 'none';
+  phaseModalOpen = false;
+  pendingAdd = null;
+  state.ui.lastWarnKey = null;
+}
+
+resetPhasesBtn.addEventListener('click', () => {
+  const msg =
+    "RESET FASES\n\n" +
+    "• Cancela Color/Permanente por fases\n" +
+    "• NO borra cola ni registro\n" +
+    "• NO borra aprendizaje\n\n" +
+    "¿Confirmás?";
+  if(!confirm(msg)) return;
+
+  if(state.current && (state.current.service==='color' || state.current.service==='perm')){
+    state.current = null;
+  }
+  state.bg = null;
+
+  if(!state.current && state.pausedCut){
+    const c = state.pausedCut;
+    state.pausedCut = null;
+    startCutFromPaused(c.service, c.remainingMin);
+  }
+
+  closeAllOperationalDialogs();
+  vibrate(120);
+  render();
+});
+
+resetAllBtn.addEventListener('click', () => {
+  const msg =
+    "RESET TOTAL (operativo)\n\n" +
+    "• Cancela lo que estés haciendo ahora\n" +
+    "• Borra cola en espera\n" +
+    "• Cancela fases (Color/Permanente)\n" +
+    "• NO borra registro ni aprendizaje\n\n" +
+    "¿Confirmás?";
+  if(!confirm(msg)) return;
+
+  state.current = null;
+  state.bg = null;
+  state.pausedCut = null;
+  state.queue = [];
+
+  closeAllOperationalDialogs();
+  vibrate(180);
+  render();
+});
 
 /* Service Worker */
 if('serviceWorker' in navigator){
@@ -1511,6 +1598,8 @@ if('serviceWorker' in navigator){
   });
 }
 
+/* Tick */
+setInterval(render, 2000);
 render();
 </script>
 </body>
