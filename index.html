@@ -483,27 +483,38 @@
   <dialog id="settingsDlg">
     <form method="dialog" class="sheet">
       <h3>Ajustes</h3>
-      <div class="muted">Tiempos + promedio automático (min/max → avg).</div>
+      <div class="muted">Turnos + tiempos + promedio automático (min/max → avg).</div>
 
-      <h4>Horario</h4>
+      <h4>Turnos</h4>
       <div class="grid2">
-        <div>
-          <div class="muted">Cierre</div>
-          <input id="cfgEnd" type="text" placeholder="22:00">
-        </div>
+        <div><div class="muted">Inicio mañana</div><input id="cfgAMStart" type="text" placeholder="09:30"></div>
+        <div><div class="muted">Fin mañana</div><input id="cfgAMEnd" type="text" placeholder="13:00"></div>
+      </div>
+      <div class="grid2" style="margin-top:10px;">
+        <div><div class="muted">Inicio tarde</div><input id="cfgPMStart" type="text" placeholder="17:30"></div>
+        <div><div class="muted">Fin tarde</div><input id="cfgPMEnd" type="text" placeholder="22:00"></div>
+      </div>
+
+      <h4>Límites</h4>
+      <div class="grid2">
         <div>
           <div class="muted">Tolerancia (min)</div>
           <input id="cfgHard" type="number" min="0" step="1">
         </div>
-      </div>
-      <div class="grid2" style="margin-top:10px;">
         <div>
           <div class="muted">Margen semáforo (min)</div>
           <input id="cfgBuf" type="number" min="0" step="1">
         </div>
+      </div>
+
+      <div class="grid2" style="margin-top:10px;">
         <div>
           <div class="muted">Auto-aprendizaje (0 a 1)</div>
           <input id="cfgAuto" type="number" min="0" max="1" step="0.01">
+        </div>
+        <div>
+          <div class="muted">—</div>
+          <input disabled value="(usa hora actual)" />
         </div>
       </div>
 
@@ -559,7 +570,7 @@
       </div>
 
       <div class="hintLine">
-        “CANCELAR LARGO” corta Color/Permanente activo. “RESET LARGO” lo reinicia. “RESET TOTAL” limpia lo operativo (sin borrar aprendizaje ni registro).
+        El color AMARILLO/ROJO se calcula según el turno actual (mañana o tarde).
       </div>
     </form>
   </dialog>
@@ -597,16 +608,24 @@ const services = [
 const svcLabel = Object.fromEntries(services.map(s=>[s.id,s.label]));
 
 /* Estado (localStorage) */
-const LS='turnos_minimal_simple_v4';
+const LS='turnos_minimal_simple_v5';
 const load=()=>{ try{return JSON.parse(localStorage.getItem(LS))||null}catch{return null} };
 const save=(s)=>localStorage.setItem(LS, JSON.stringify(s));
 
 const defaultState={
-  cfg:{ shiftEnd:'22:00', hardOver:10, buffer:12, learnAlpha:0.22 },
-  current:null,      // {kind:'cut'|'longActive', service, startedAtMin, startedAtMs, remainingOverride?}
-  pausedCut:null,    // {service, remainingMin}
-  queue:[],          // [{id, service}]
-  long:null,         // {type, phases:[{name,kind,minutes}], i, phaseEndsAtMs}
+  cfg:{
+    shiftStartAM:'09:30',
+    shiftEndAM:'13:00',
+    shiftStartPM:'17:30',
+    shiftEndPM:'22:00',
+    hardOver:10,
+    buffer:12,
+    learnAlpha:0.22
+  },
+  current:null,
+  pausedCut:null,
+  queue:[],
+  long:null,
   log:[],
   seq:1,
   times:{
@@ -617,7 +636,39 @@ const defaultState={
     permSimple:{ active1:60, wait1:45, active2:10, wait2:30, final:10, includeCut:1 }
   }
 };
+
 let state = load() || structuredClone(defaultState);
+
+/* Migración por si venías de versiones viejas */
+(function migrate(){
+  state.cfg ||= {};
+  if(!state.cfg.shiftStartAM) state.cfg.shiftStartAM = '09:30';
+  if(!state.cfg.shiftEndAM) state.cfg.shiftEndAM = '13:00';
+  if(!state.cfg.shiftStartPM) state.cfg.shiftStartPM = '17:30';
+  if(!state.cfg.shiftEndPM){
+    state.cfg.shiftEndPM = state.cfg.shiftEnd || '22:00';
+  }
+  if(state.cfg.hardOver == null) state.cfg.hardOver = 10;
+  if(state.cfg.buffer == null) state.cfg.buffer = 12;
+  if(state.cfg.learnAlpha == null) state.cfg.learnAlpha = 0.22;
+})();
+
+/* Cierre dinámico (elige 13:00 o 22:00 según hora) */
+function currentShiftEndMin(){
+  const now = nowMin();
+  const amS = toMin(state.cfg.shiftStartAM);
+  const amE = toMin(state.cfg.shiftEndAM);
+  const pmS = toMin(state.cfg.shiftStartPM);
+  const pmE = toMin(state.cfg.shiftEndPM);
+
+  if(now >= amS && now <= amE) return amE;
+  if(now >= pmS && now <= pmE) return pmE;
+
+  if(now < amS) return amE;   // antes de abrir: cierre relevante mañana
+  if(now < pmS) return pmE;   // entre turnos: cierre relevante tarde
+  return pmE;                 // después: tarde
+}
+function currentShiftEndText(){ return fromMin(currentShiftEndMin()); }
 
 /* UI refs */
 const elNow=document.getElementById('now');
@@ -662,7 +713,10 @@ const overDlg=document.getElementById('overDlg');
 const overText=document.getElementById('overText');
 
 const settingsDlg=document.getElementById('settingsDlg');
-const cfgEnd=document.getElementById('cfgEnd');
+const cfgAMStart=document.getElementById('cfgAMStart');
+const cfgAMEnd=document.getElementById('cfgAMEnd');
+const cfgPMStart=document.getElementById('cfgPMStart');
+const cfgPMEnd=document.getElementById('cfgPMEnd');
 const cfgHard=document.getElementById('cfgHard');
 const cfgBuf=document.getElementById('cfgBuf');
 const cfgAuto=document.getElementById('cfgAuto');
@@ -874,20 +928,20 @@ function etaFinishMin(){
 }
 
 function statusFor(eta){
-  const end=toMin(state.cfg.shiftEnd);
-  const hard=end + state.cfg.hardOver;
-  const buf=state.cfg.buffer;
-  const etaBuf=eta + buf;
+  const end = currentShiftEndMin();
+  const hard = end + state.cfg.hardOver;
+  const buf = state.cfg.buffer;
+  const etaBuf = eta + buf;
 
-  if(etaBuf<=end) return {label:'VERDE', color:'var(--green)', explain:`Con margen (+${buf}) terminás ${fromMin(etaBuf)}.`};
-  if(etaBuf<=hard) return {label:'AMARILLO', color:'var(--amber)', explain:`Te pasás un poco. Con margen: ${fromMin(etaBuf)}.`};
-  return {label:'ROJO', color:'var(--red)', explain:`No entra más. Con margen: ${fromMin(etaBuf)}.`};
+  if(etaBuf<=end) return {label:'VERDE', color:'var(--green)', explain:`Con margen (+${buf}) terminás ${fromMin(etaBuf)}. Cierre: ${currentShiftEndText()}`};
+  if(etaBuf<=hard) return {label:'AMARILLO', color:'var(--amber)', explain:`Te pasás un poco. Con margen: ${fromMin(etaBuf)}. Cierre: ${currentShiftEndText()}`};
+  return {label:'ROJO', color:'var(--red)', explain:`No entra más. Con margen: ${fromMin(etaBuf)}. Cierre: ${currentShiftEndText()}`};
 }
 
-/* Estado del próximo corte (para colorear INICIAR: azul/amarillo/rojo) */
+/* Próximo corte (para colorear INICIAR: azul/amarillo/rojo según turno actual) */
 function nextCutFitStatus(){
   const now = nowMin();
-  const end = toMin(state.cfg.shiftEnd);
+  const end = currentShiftEndMin();
   const hard = end + Number(state.cfg.hardOver || 0);
   const cutEst = estFor('cut');
 
@@ -959,7 +1013,7 @@ function renderQueue(){
   }
 }
 
-/* Ring (solo progreso) */
+/* Ring (progreso) */
 function setRingProgress(pct){
   const deg = Math.max(0, Math.min(1, pct)) * 360;
   ring.style.setProperty('--p', `${deg}deg`);
@@ -1052,20 +1106,18 @@ function render(){
       setAccent('blue');
       subText.textContent = state.queue.length
         ? `Hay ${state.queue.length} en espera.`
-        : `Entra un corte: ${fromMin(f.start)}–${fromMin(f.finish)}.`;
+        : `Entra un corte: ${fromMin(f.start)}–${fromMin(f.finish)} (cierre ${currentShiftEndText()}).`;
     } else if(f.status==='yellow'){
       setAccent('yellow');
-      subText.textContent = `Entra JUSTO: ${fromMin(f.start)}–${fromMin(f.finish)} (cierra ${state.cfg.shiftEnd}).`;
+      subText.textContent = `Entra JUSTO: ${fromMin(f.start)}–${fromMin(f.finish)} (cierre ${currentShiftEndText()}).`;
     } else {
       setAccent('red');
-      subText.textContent = `No entra: terminarías ${fromMin(f.finish)}. Si tocás INICIAR, te pasás.`;
+      subText.textContent = `No entra: terminarías ${fromMin(f.finish)} (cierre ${currentShiftEndText()}).`;
     }
 
     elStatusLine.textContent = `Libre${longTxt}${pausedTxt}`;
   } else {
     actionText.textContent = 'FINALIZAR';
-
-    // En curso: rojo profundo
     setAccent('red');
 
     const rem=currentRemainingMin();
@@ -1144,7 +1196,6 @@ finishDlg.addEventListener('close', () => {
   const done = Math.max(1, currentActiveMin());
   let service = finishService.value || 'cut';
 
-  // Si estabas en fase activa de largo y finalizás: registramos el largo como bloque total (estimado)
   if(state.current.kind==='longActive'){
     service = state.long?.type || service;
 
@@ -1166,7 +1217,6 @@ finishDlg.addEventListener('close', () => {
     return;
   }
 
-  // Aprendizaje (solo cortes)
   const a = clamp(Number(state.cfg.learnAlpha || 0.22), 0, 1);
   if(a>0){
     const t=state.times;
@@ -1194,6 +1244,14 @@ finishDlg.addEventListener('close', () => {
 
   state.current = null;
   vibrate(80);
+
+  // Auto-iniciar el siguiente en cola (si existe) al terminar
+  if(state.queue.length){
+    const next = state.queue.shift();
+    const nowM = nowMin();
+    state.current = { kind:'cut', service: next.service, startedAtMin: nowM, startedAtMs: Date.now() };
+  }
+
   render();
 });
 
@@ -1239,10 +1297,10 @@ waitDlg.addEventListener('close', () => {
   const service = waitService.value || 'cut';
   const p = projectedEndIfAdd(service);
 
-  const end = toMin(state.cfg.shiftEnd);
+  const end = currentShiftEndMin();
   if(p.end > end){
     pendingAdd = { service, p };
-    overText.textContent = `Este turno terminaría a ${fromMin(p.end)} (cierre ${state.cfg.shiftEnd}). ¿Aceptar igual?`;
+    overText.textContent = `Este turno terminaría a ${fromMin(p.end)} (cierre ${currentShiftEndText()}). ¿Aceptar igual?`;
     overDlg.showModal();
     return;
   }
@@ -1256,7 +1314,7 @@ overDlg.addEventListener('close', () => {
   if(overDlg.returnValue!=='ok'){ pendingAdd = null; return; }
   if(!pendingAdd) return;
 
-  const end = toMin(state.cfg.shiftEnd);
+  const end = currentShiftEndMin();
   const hard = end + state.cfg.hardOver;
   if(pendingAdd.p.end > hard){
     pendingAdd = null;
@@ -1351,7 +1409,11 @@ clearBtn.addEventListener('click', (e) => {
 
 /* Ajustes */
 function openSettings(){
-  cfgEnd.value = state.cfg.shiftEnd;
+  cfgAMStart.value = state.cfg.shiftStartAM;
+  cfgAMEnd.value = state.cfg.shiftEndAM;
+  cfgPMStart.value = state.cfg.shiftStartPM;
+  cfgPMEnd.value = state.cfg.shiftEndPM;
+
   cfgHard.value = state.cfg.hardOver;
   cfgBuf.value = state.cfg.buffer;
   cfgAuto.value = state.cfg.learnAlpha ?? 0.22;
@@ -1392,7 +1454,11 @@ avgBtn.addEventListener('click', (e) => {
 settingsDlg.addEventListener('close', () => {
   if(settingsDlg.returnValue!=='ok') return;
 
-  state.cfg.shiftEnd = (cfgEnd.value||'22:00').trim();
+  state.cfg.shiftStartAM = (cfgAMStart.value||'09:30').trim();
+  state.cfg.shiftEndAM = (cfgAMEnd.value||'13:00').trim();
+  state.cfg.shiftStartPM = (cfgPMStart.value||'17:30').trim();
+  state.cfg.shiftEndPM = (cfgPMEnd.value||'22:00').trim();
+
   state.cfg.hardOver = Number(cfgHard.value||10);
   state.cfg.buffer = Number(cfgBuf.value||12);
   state.cfg.learnAlpha = clamp(Number(cfgAuto.value||0.22), 0, 1);
