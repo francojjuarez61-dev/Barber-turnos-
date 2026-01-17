@@ -116,6 +116,9 @@
       cursor:pointer;
       user-select:none;
       transform: translateZ(0);
+      overflow: hidden; /* ripple */
+      --accentColor: rgba(78,166,255,.95);
+      --accentGlow: rgba(78,166,255,.35);
     }
 
     .ring{
@@ -180,6 +183,23 @@
     }
 
     .mainBtn:active .core{ transform: translateY(1px) scale(.995); }
+
+    /* Ripple inteligente: usa --accentColor / --accentGlow (se actualizan según azul/amarillo/rojo) */
+    .mainBtn .ripple{
+      position:absolute;
+      border-radius:999px;
+      transform: translate(-50%, -50%);
+      animation: ripple 560ms ease-out;
+      pointer-events:none;
+      opacity:.34;
+      background: var(--accentColor);
+      filter: drop-shadow(0 0 22px var(--accentGlow));
+      mix-blend-mode: screen;
+    }
+    @keyframes ripple{
+      from { width:0; height:0; opacity:.36; }
+      to   { width:560px; height:560px; opacity:0; }
+    }
 
     .bottomRow{
       display:flex;
@@ -339,7 +359,6 @@
       color: rgba(234,240,255,.8);
     }
 
-    /* Registro */
     .logList{
       margin-top: 10px;
       display:flex;
@@ -407,12 +426,11 @@
       <button class="miniBtn miniBtnBlue" id="logBtn">REGISTRO</button>
       <button class="miniBtn" id="settingsBtn">AJUSTES</button>
       <button class="miniBtn miniBtnRed" id="cancelLongBtn">CANCELAR LARGO</button>
-      <button class="miniBtn" id="resetPhasesBtn">RESET LARGO</button>
+      <button class="miniBtn" id="resetLongBtn">RESET LARGO</button>
       <button class="miniBtn miniBtnRed" id="resetAllBtn">RESET TOTAL</button>
     </div>
   </div>
 
-  <!-- Modal: iniciar -->
   <dialog id="startDlg">
     <form method="dialog" class="sheet">
       <h3>Iniciar</h3>
@@ -422,11 +440,10 @@
         <button class="btn" value="cancel">Cancelar</button>
         <button class="btn btnBlue" value="ok">Arrancar</button>
       </div>
-      <div class="hintLine">Color/Permanente usan “tiempos muertos” automáticamente.</div>
+      <div class="hintLine">Color/Permanente usan tiempos muertos automáticos (sin avisos).</div>
     </form>
   </dialog>
 
-  <!-- Modal: finalizar -->
   <dialog id="finishDlg">
     <form method="dialog" class="sheet">
       <h3>Finalizar</h3>
@@ -439,7 +456,6 @@
     </form>
   </dialog>
 
-  <!-- Modal: espera -->
   <dialog id="waitDlg">
     <form method="dialog" class="sheet">
       <h3>Espera</h3>
@@ -453,7 +469,6 @@
     </form>
   </dialog>
 
-  <!-- Modal: confirmación por pasarse de horario -->
   <dialog id="overDlg">
     <form method="dialog" class="sheet">
       <h3>Se pasa del cierre</h3>
@@ -465,11 +480,10 @@
     </form>
   </dialog>
 
-  <!-- Modal: ajustes -->
   <dialog id="settingsDlg">
     <form method="dialog" class="sheet">
       <h3>Ajustes</h3>
-      <div class="muted">Tiempos simples + promedio automático.</div>
+      <div class="muted">Tiempos + promedio automático (min/max → avg).</div>
 
       <h4>Horario</h4>
       <div class="grid2">
@@ -488,43 +502,23 @@
           <input id="cfgBuf" type="number" min="0" step="1">
         </div>
         <div>
-          <div class="muted">Auto-aprendizaje</div>
-          <input id="cfgAuto" type="number" min="0" max="1" step="0.01" placeholder="0.22">
+          <div class="muted">Auto-aprendizaje (0 a 1)</div>
+          <input id="cfgAuto" type="number" min="0" max="1" step="0.01">
         </div>
       </div>
 
       <h4>Corte / Barba / Sellado</h4>
       <div class="grid2">
-        <div>
-          <div class="muted">Corte MIN</div>
-          <input id="cutMin" type="number" min="5" step="1">
-        </div>
-        <div>
-          <div class="muted">Corte MAX</div>
-          <input id="cutMax" type="number" min="5" step="1">
-        </div>
+        <div><div class="muted">Corte MIN</div><input id="cutMin" type="number" min="5" step="1"></div>
+        <div><div class="muted">Corte MAX</div><input id="cutMax" type="number" min="5" step="1"></div>
       </div>
-
       <div class="grid2" style="margin-top:10px;">
-        <div>
-          <div class="muted">Extra Barba MIN</div>
-          <input id="beardMin" type="number" min="0" step="1">
-        </div>
-        <div>
-          <div class="muted">Extra Barba MAX</div>
-          <input id="beardMax" type="number" min="0" step="1">
-        </div>
+        <div><div class="muted">Extra Barba MIN</div><input id="beardMin" type="number" min="0" step="1"></div>
+        <div><div class="muted">Extra Barba MAX</div><input id="beardMax" type="number" min="0" step="1"></div>
       </div>
-
       <div class="grid2" style="margin-top:10px;">
-        <div>
-          <div class="muted">Extra Sellado MIN</div>
-          <input id="thermMin" type="number" min="0" step="1">
-        </div>
-        <div>
-          <div class="muted">Extra Sellado MAX</div>
-          <input id="thermMax" type="number" min="0" step="1">
-        </div>
+        <div><div class="muted">Extra Sellado MIN</div><input id="thermMin" type="number" min="0" step="1"></div>
+        <div><div class="muted">Extra Sellado MAX</div><input id="thermMax" type="number" min="0" step="1"></div>
       </div>
 
       <div class="row">
@@ -532,18 +526,17 @@
       </div>
 
       <h4>Color (simple con tiempos muertos)</h4>
-      <div class="muted">Ej: mechas 40 (activo) + espera 45 (muerto) + cambio 12 (activo) + espera 45 (muerto).</div>
       <div class="grid2">
-        <div><div class="muted">Mechas / preparar (activo)</div><input id="colPrep" type="number" min="0" step="1"></div>
+        <div><div class="muted">Prep/Mechas (activo)</div><input id="colPrep" type="number" min="0" step="1"></div>
         <div><div class="muted">Espera 1 (muerto)</div><input id="colWait1" type="number" min="0" step="1"></div>
       </div>
       <div class="grid2" style="margin-top:10px;">
-        <div><div class="muted">Cambio producto (activo)</div><input id="colChange" type="number" min="0" step="1"></div>
+        <div><div class="muted">Cambio (activo)</div><input id="colChange" type="number" min="0" step="1"></div>
         <div><div class="muted">Espera 2 (muerto)</div><input id="colWait2" type="number" min="0" step="1"></div>
       </div>
       <div class="grid2" style="margin-top:10px;">
         <div><div class="muted">Final (activo)</div><input id="colFinal" type="number" min="0" step="1"></div>
-        <div><div class="muted">Incluye corte final (0/1)</div><input id="colCut" type="number" min="0" max="1" step="1"></div>
+        <div><div class="muted">Incluye corte (0/1)</div><input id="colCut" type="number" min="0" max="1" step="1"></div>
       </div>
 
       <h4>Permanente (simple con tiempos muertos)</h4>
@@ -557,7 +550,7 @@
       </div>
       <div class="grid2" style="margin-top:10px;">
         <div><div class="muted">Final (activo)</div><input id="perFinal" type="number" min="0" step="1"></div>
-        <div><div class="muted">Incluye corte final (0/1)</div><input id="perCut" type="number" min="0" max="1" step="1"></div>
+        <div><div class="muted">Incluye corte (0/1)</div><input id="perCut" type="number" min="0" max="1" step="1"></div>
       </div>
 
       <div class="row">
@@ -566,12 +559,11 @@
       </div>
 
       <div class="hintLine">
-        “RESET LARGO” reinicia solo el trabajo largo. “RESET TOTAL” deja todo operativo en cero, sin borrar aprendizaje ni registro.
+        “CANCELAR LARGO” corta Color/Permanente activo. “RESET LARGO” lo reinicia. “RESET TOTAL” limpia lo operativo (sin borrar aprendizaje ni registro).
       </div>
     </form>
   </dialog>
 
-  <!-- Modal: registro -->
   <dialog id="logDlg">
     <form method="dialog" class="sheet">
       <h3>Registro del día</h3>
@@ -586,7 +578,7 @@
   </dialog>
 
 <script>
-/* ===== Helpers ===== */
+/* Helpers */
 const pad = n => String(n).padStart(2,'0');
 const nowMin = () => { const d=new Date(); return d.getHours()*60+d.getMinutes(); }
 const fromMin = (m) => { m=((m%1440)+1440)%1440; return pad(Math.floor(m/60))+':'+pad(m%60); }
@@ -594,7 +586,7 @@ const toMin = (hhmm) => { const [h,m]=hhmm.split(':').map(Number); return h*60+m
 function clamp(n,min,max){ return Math.max(min, Math.min(max, n)); }
 function vibrate(ms){ try{ if(navigator.vibrate) navigator.vibrate(ms);}catch{} }
 
-/* ===== Servicios (solo los que pediste) ===== */
+/* Servicios */
 const services = [
   { id:'cut', label:'Corte' },
   { id:'cutbeard', label:'Corte + Barba' },
@@ -604,37 +596,30 @@ const services = [
 ];
 const svcLabel = Object.fromEntries(services.map(s=>[s.id,s.label]));
 
-/* ===== Estado ===== */
-const LS='turnos_minimal_simple_v1';
+/* Estado (localStorage) */
+const LS='turnos_minimal_simple_v4';
 const load=()=>{ try{return JSON.parse(localStorage.getItem(LS))||null}catch{return null} };
 const save=(s)=>localStorage.setItem(LS, JSON.stringify(s));
 
 const defaultState={
-  cfg:{
-    shiftEnd:'22:00',
-    hardOver:10,
-    buffer:12,
-    learnAlpha:0.22
-  },
+  cfg:{ shiftEnd:'22:00', hardOver:10, buffer:12, learnAlpha:0.22 },
   current:null,      // {kind:'cut'|'longActive', service, startedAtMin, startedAtMs, remainingOverride?}
   pausedCut:null,    // {service, remainingMin}
   queue:[],          // [{id, service}]
-  long:null,         // {type:'color'|'perm', phases:[{name,kind,minutes}], i, phaseEndsAtMs}
+  long:null,         // {type, phases:[{name,kind,minutes}], i, phaseEndsAtMs}
   log:[],
   seq:1,
   times:{
     cut:{ min:35, max:50, avg:42 },
     beard:{ min:15, max:20, avg:18 },
     thermal:{ min:15, max:25, avg:22 },
-
     colorSimple:{ prep:40, wait1:45, change:12, wait2:45, final:12, includeCut:1 },
     permSimple:{ active1:60, wait1:45, active2:10, wait2:30, final:10, includeCut:1 }
   }
 };
-
 let state = load() || structuredClone(defaultState);
 
-/* ===== UI refs ===== */
+/* UI refs */
 const elNow=document.getElementById('now');
 const elEta=document.getElementById('eta');
 const elEtaExplain=document.getElementById('etaExplain');
@@ -658,7 +643,7 @@ const undoBtn=document.getElementById('undoBtn');
 const logBtn=document.getElementById('logBtn');
 const settingsBtn=document.getElementById('settingsBtn');
 const cancelLongBtn=document.getElementById('cancelLongBtn');
-const resetPhasesBtn=document.getElementById('resetPhasesBtn');
+const resetLongBtn=document.getElementById('resetLongBtn');
 const resetAllBtn=document.getElementById('resetAllBtn');
 
 const startDlg=document.getElementById('startDlg');
@@ -710,7 +695,7 @@ const logList=document.getElementById('logList');
 const copyBtn=document.getElementById('copyBtn');
 const clearBtn=document.getElementById('clearBtn');
 
-/* ===== Fill selects ===== */
+/* Fill selects */
 function fillServiceSelect(sel){
   sel.innerHTML = services.map(s=>`<option value="${s.id}">${s.label}</option>`).join('');
 }
@@ -718,13 +703,12 @@ fillServiceSelect(startService);
 fillServiceSelect(finishService);
 fillServiceSelect(waitService);
 
-/* ===== Estimaciones ===== */
+/* Estimaciones */
 function estFor(service){
   const t = state.times;
   if(service==='cut') return Math.round(t.cut.avg);
   if(service==='cutbeard') return Math.round(t.cut.avg + t.beard.avg);
   if(service==='cutbeardthermal') return Math.round(t.cut.avg + t.beard.avg + t.thermal.avg);
-
   if(service==='color'){
     const c=t.colorSimple;
     const base = c.prep + c.wait1 + c.change + c.wait2 + c.final;
@@ -738,7 +722,7 @@ function estFor(service){
   return Math.round(t.cut.avg);
 }
 
-/* ===== Timer robusto (Date.now) ===== */
+/* Timer robusto (Date.now) */
 function ensureStartedAtMs(){
   if(state.current && !state.current.startedAtMs){
     state.current.startedAtMs = Date.now();
@@ -763,31 +747,31 @@ function currentRemainingMin(){
   return Math.round(est - elapsed); // puede ser negativo (demora)
 }
 
-/* ===== Largo con tiempos muertos (auto, sin avisos) ===== */
+/* Largo (fases simples con tiempos muertos, sin avisos) */
 function buildLongPhases(type){
   const t=state.times;
   if(type==='color'){
     const c=t.colorSimple;
     const phases = [
-      { name:'Color: preparar/mechas', kind:'active', minutes: c.prep },
-      { name:'Color: espera 1', kind:'wait', minutes: c.wait1 },
-      { name:'Color: cambio producto', kind:'active', minutes: c.change },
-      { name:'Color: espera 2', kind:'wait', minutes: c.wait2 },
-      { name:'Color: final', kind:'active', minutes: c.final }
+      { name:'Prep/Mechas', kind:'active', minutes: c.prep },
+      { name:'Espera 1', kind:'wait', minutes: c.wait1 },
+      { name:'Cambio', kind:'active', minutes: c.change },
+      { name:'Espera 2', kind:'wait', minutes: c.wait2 },
+      { name:'Final', kind:'active', minutes: c.final }
     ];
-    if(c.includeCut) phases.push({ name:'Color: corte final', kind:'active', minutes: Math.round(state.times.cut.avg) });
+    if(c.includeCut) phases.push({ name:'Corte final', kind:'active', minutes: Math.round(state.times.cut.avg) });
     return phases;
   }
   if(type==='perm'){
     const p=t.permSimple;
     const phases = [
-      { name:'Perm: ruleros', kind:'active', minutes: p.active1 },
-      { name:'Perm: espera 1', kind:'wait', minutes: p.wait1 },
-      { name:'Perm: neutralizante', kind:'active', minutes: p.active2 },
-      { name:'Perm: espera 2', kind:'wait', minutes: p.wait2 },
-      { name:'Perm: final', kind:'active', minutes: p.final }
+      { name:'Ruleros', kind:'active', minutes: p.active1 },
+      { name:'Espera 1', kind:'wait', minutes: p.wait1 },
+      { name:'Neutralizante', kind:'active', minutes: p.active2 },
+      { name:'Espera 2', kind:'wait', minutes: p.wait2 },
+      { name:'Final', kind:'active', minutes: p.final }
     ];
-    if(p.includeCut) phases.push({ name:'Perm: corte final', kind:'active', minutes: Math.round(state.times.cut.avg) });
+    if(p.includeCut) phases.push({ name:'Corte final', kind:'active', minutes: Math.round(state.times.cut.avg) });
     return phases;
   }
   return [];
@@ -806,24 +790,11 @@ function startCutFromPaused(service, remainingMin){
 
 function startLong(type){
   const phases = buildLongPhases(type);
+  if(!phases.length) return;
   const nowMs = Date.now();
   const nowM = nowMin();
-
-  state.long = {
-    type,
-    phases,
-    i: 0,
-    phaseEndsAtMs: nowMs + phases[0].minutes*60000
-  };
-
-  // fase 0 siempre active, la corremos como "current"
-  state.current = {
-    kind:'longActive',
-    service: type,
-    startedAtMin: nowM,
-    startedAtMs: nowMs,
-    remainingOverride: phases[0].minutes
-  };
+  state.long = { type, phases, i: 0, phaseEndsAtMs: nowMs + phases[0].minutes*60000 };
+  state.current = { kind:'longActive', service: type, startedAtMin: nowM, startedAtMs: nowMs, remainingOverride: phases[0].minutes };
 }
 
 function longPhase(){
@@ -835,29 +806,17 @@ function advanceLong(){
   if(!state.long) return;
   state.long.i++;
   const ph = longPhase();
-  if(!ph){
-    state.long = null;
-    return;
-  }
+  if(!ph){ state.long = null; return; }
   state.long.phaseEndsAtMs = Date.now() + ph.minutes*60000;
 
   if(ph.kind==='active'){
-    // si estabas con un corte, lo pausamos
     if(state.current && state.current.kind==='cut'){
       const rem = currentRemainingMin();
       state.pausedCut = { service: state.current.service, remainingMin: rem };
       state.current = null;
     }
-    // arrancamos fase activa como current
-    state.current = {
-      kind:'longActive',
-      service: state.long.type,
-      startedAtMin: nowMin(),
-      startedAtMs: Date.now(),
-      remainingOverride: ph.minutes
-    };
-  }else{
-    // fase wait: si había corte pausado y no hay current, reanudamos corte
+    state.current = { kind:'longActive', service: state.long.type, startedAtMin: nowMin(), startedAtMs: Date.now(), remainingOverride: ph.minutes };
+  } else {
     if(!state.current && state.pausedCut){
       const c = state.pausedCut;
       state.pausedCut = null;
@@ -868,7 +827,6 @@ function advanceLong(){
 
 function tickLong(){
   if(!state.long) { bgLine.style.display='none'; return; }
-
   const ph = longPhase();
   if(!ph){ bgLine.style.display='none'; return; }
 
@@ -879,12 +837,11 @@ function tickLong(){
   bgLine.innerHTML = `<strong>${svcLabel[state.long.type]}</strong>: ${ph.name} · ${ph.kind==='wait'?'espera':'activo'} · faltan ${Math.max(0,remMin)}m${next ? ` · luego: ${next.name}` : ''}`;
 
   if(Date.now() >= state.long.phaseEndsAtMs){
-    // auto-avanza sin pedirte nada
     advanceLong();
   }
 }
 
-/* ===== ETA / Semáforo ===== */
+/* ETA / Semáforo */
 function totalRemainingLongMin(){
   if(!state.long) return 0;
   let total = Math.max(0, Math.ceil((state.long.phaseEndsAtMs - Date.now())/60000));
@@ -899,15 +856,12 @@ function etaFinishMin(){
   let t = nowM;
 
   if(state.current){
-    const rem = currentRemainingMin();
-    t += Math.max(0, rem);
+    t += Math.max(0, currentRemainingMin());
   }
 
-  // agregar restante del largo evitando doble contar la fase actual
   if(state.long){
     let longRem = totalRemainingLongMin();
     if(state.current && state.current.kind==='longActive'){
-      // restar lo que ya está contemplado por current.remainingOverride
       const phRem = Math.max(0, Math.ceil((state.long.phaseEndsAtMs - Date.now())/60000));
       longRem = Math.max(0, longRem - phRem);
     }
@@ -915,10 +869,7 @@ function etaFinishMin(){
   }
 
   if(state.pausedCut) t += Math.max(0, state.pausedCut.remainingMin);
-
-  for(const q of state.queue){
-    t += estFor(q.service);
-  }
+  for(const q of state.queue) t += estFor(q.service);
   return t;
 }
 
@@ -933,7 +884,37 @@ function statusFor(eta){
   return {label:'ROJO', color:'var(--red)', explain:`No entra más. Con margen: ${fromMin(etaBuf)}.`};
 }
 
-/* ===== Cola UI ===== */
+/* Estado del próximo corte (para colorear INICIAR: azul/amarillo/rojo) */
+function nextCutFitStatus(){
+  const now = nowMin();
+  const end = toMin(state.cfg.shiftEnd);
+  const hard = end + Number(state.cfg.hardOver || 0);
+  const cutEst = estFor('cut');
+
+  let occupied = 0;
+  if(state.current) occupied += Math.max(0, currentRemainingMin());
+
+  if(state.long){
+    let longRem = totalRemainingLongMin();
+    if(state.current && state.current.kind==='longActive'){
+      const phRem = Math.max(0, Math.ceil((state.long.phaseEndsAtMs - Date.now())/60000));
+      longRem = Math.max(0, longRem - phRem);
+    }
+    occupied += longRem;
+  }
+
+  if(state.pausedCut) occupied += Math.max(0, state.pausedCut.remainingMin);
+  for(const q of state.queue) occupied += estFor(q.service);
+
+  const start = now + occupied;
+  const finish = start + cutEst;
+
+  if(finish <= end) return { status:'blue', start, finish, end, hard };
+  if(finish <= hard) return { status:'yellow', start, finish, end, hard };
+  return { status:'red', start, finish, end, hard };
+}
+
+/* Cola UI */
 function personSvg(){
   return `
   <svg class="person" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -959,7 +940,6 @@ function estimateStartEndForQueue(){
 
 function renderQueue(){
   const n = state.queue.length;
-
   queueIcons.innerHTML = '';
   for(let i=0;i<Math.min(n,12);i++){
     const wrap=document.createElement('div');
@@ -979,14 +959,38 @@ function renderQueue(){
   }
 }
 
-/* ===== Ring ===== */
-function setRingProgress(pct, running){
+/* Ring (solo progreso) */
+function setRingProgress(pct){
   const deg = Math.max(0, Math.min(1, pct)) * 360;
   ring.style.setProperty('--p', `${deg}deg`);
-  ring.style.setProperty('--ringFill', running ? 'var(--red)' : 'var(--blue)');
 }
 
-/* ===== Registro ===== */
+/* Acento (afecta ring + ripple) */
+function setAccent(kind){
+  if(kind==='blue'){
+    mainBtn.style.setProperty('--accentColor','rgba(78,166,255,.95)');
+    mainBtn.style.setProperty('--accentGlow','rgba(78,166,255,.38)');
+    ring.style.filter = 'drop-shadow(0 0 18px rgba(78,166,255,.28))';
+    ring.style.setProperty('--ringFill','var(--blue)');
+    return;
+  }
+  if(kind==='yellow'){
+    mainBtn.style.setProperty('--accentColor','rgba(255,212,90,.95)');
+    mainBtn.style.setProperty('--accentGlow','rgba(255,212,90,.36)');
+    ring.style.filter = 'drop-shadow(0 0 18px rgba(255,212,90,.30))';
+    ring.style.setProperty('--ringFill','var(--amber)');
+    return;
+  }
+  if(kind==='red'){
+    mainBtn.style.setProperty('--accentColor','rgba(255,78,106,.95)');
+    mainBtn.style.setProperty('--accentGlow','rgba(255,78,106,.40)');
+    ring.style.filter = 'drop-shadow(0 0 18px rgba(255,78,106,.35))';
+    ring.style.setProperty('--ringFill','var(--red)');
+    return;
+  }
+}
+
+/* Registro */
 function renderLog(){
   const items = state.log || [];
   const total = items.length;
@@ -1015,7 +1019,7 @@ function logToText(){
   }).join('\n');
 }
 
-/* ===== Render ===== */
+/* Render */
 function render(){
   tickLong();
   renderQueue();
@@ -1035,18 +1039,35 @@ function render(){
   const longTxt = state.long ? ` · ${svcLabel[state.long.type]}` : '';
   const pausedTxt = state.pausedCut ? ` · Corte pausado (${state.pausedCut.remainingMin}m)` : '';
 
-  const hasLong = !!state.long || (state.current && (state.current.service==='color' || state.current.service==='perm' || state.current.kind==='longActive'));
+  const hasLong = !!state.long || (state.current && state.current.kind==='longActive');
   cancelLongBtn.style.display = hasLong ? 'inline-block' : 'none';
-  resetPhasesBtn.style.display = hasLong ? 'inline-block' : 'inline-block';
 
   if(!state.current){
     actionText.textContent = 'INICIAR';
     countdown.textContent = '—';
-    subText.textContent = state.queue.length ? `Hay ${state.queue.length} en espera.` : 'Tocá para arrancar.';
-    setRingProgress(0, false);
+    setRingProgress(0);
+
+    const f = nextCutFitStatus();
+    if(f.status==='blue'){
+      setAccent('blue');
+      subText.textContent = state.queue.length
+        ? `Hay ${state.queue.length} en espera.`
+        : `Entra un corte: ${fromMin(f.start)}–${fromMin(f.finish)}.`;
+    } else if(f.status==='yellow'){
+      setAccent('yellow');
+      subText.textContent = `Entra JUSTO: ${fromMin(f.start)}–${fromMin(f.finish)} (cierra ${state.cfg.shiftEnd}).`;
+    } else {
+      setAccent('red');
+      subText.textContent = `No entra: terminarías ${fromMin(f.finish)}. Si tocás INICIAR, te pasás.`;
+    }
+
     elStatusLine.textContent = `Libre${longTxt}${pausedTxt}`;
   } else {
     actionText.textContent = 'FINALIZAR';
+
+    // En curso: rojo profundo
+    setAccent('red');
+
     const rem=currentRemainingMin();
     countdown.textContent = (rem>=0) ? `${rem}m` : `+${Math.abs(rem)}m`;
 
@@ -1054,7 +1075,6 @@ function render(){
       ? `${svcLabel[state.long?.type] || 'Largo'} (fase activa)`
       : (svcLabel[state.current.service] || state.current.service);
 
-    // fin estimado fijo
     ensureStartedAtMs();
     const est = currentEstMin();
     const endMs = state.current.startedAtMs + est*60000;
@@ -1064,7 +1084,7 @@ function render(){
     subText.textContent = `Estimado ${fromMin(fin)} · ${label}`;
 
     const done = currentActiveMin();
-    setRingProgress(done / Math.max(1, est), true);
+    setRingProgress(done / Math.max(1, est));
     elStatusLine.textContent = `En curso${longTxt}${pausedTxt}`;
   }
 
@@ -1074,15 +1094,26 @@ function render(){
   save(state);
 }
 
-/* ===== Acciones ===== */
-mainBtn.addEventListener('click', () => {
+/* Ripple inteligente + lógica principal */
+function spawnRipple(e){
+  const r = document.createElement('span');
+  r.className = 'ripple';
+  const rect = mainBtn.getBoundingClientRect();
+  r.style.left = (e.clientX - rect.left) + 'px';
+  r.style.top  = (e.clientY - rect.top) + 'px';
+  mainBtn.appendChild(r);
+  r.addEventListener('animationend', () => r.remove());
+}
+
+mainBtn.addEventListener('click', (e) => {
+  spawnRipple(e);
+
   if(!state.current){
     startService.value = 'cut';
     startDlg.showModal();
   } else {
     const active = Math.max(1, currentActiveMin());
     finishInfo.textContent = `Tiempo activo: ${active} min`;
-    // sugerir el servicio actual si es corte; si es largo activo, sugerimos el largo
     if(state.current.kind==='longActive') finishService.value = state.long?.type || 'color';
     else finishService.value = state.current.service || 'cut';
     finishDlg.showModal();
@@ -1093,9 +1124,7 @@ startDlg.addEventListener('close', () => {
   if(startDlg.returnValue!=='ok') return;
 
   const service = startService.value || 'cut';
-
   if(service==='color' || service==='perm'){
-    // iniciar largo simple (fases internas)
     startLong(service);
     vibrate(80);
     render();
@@ -1103,12 +1132,7 @@ startDlg.addEventListener('close', () => {
   }
 
   const nowM=nowMin();
-  state.current = {
-    kind:'cut',
-    service,
-    startedAtMin: nowM,
-    startedAtMs: Date.now()
-  };
+  state.current = { kind:'cut', service, startedAtMin: nowM, startedAtMs: Date.now() };
   vibrate(60);
   render();
 });
@@ -1120,33 +1144,29 @@ finishDlg.addEventListener('close', () => {
   const done = Math.max(1, currentActiveMin());
   let service = finishService.value || 'cut';
 
-  // si estabas en fase activa de largo y finalizás, asumimos que terminaste TODO el largo (simple)
-  // (para no complicar: lo guardamos como color/perm y cancelamos el largo)
+  // Si estabas en fase activa de largo y finalizás: registramos el largo como bloque total (estimado)
   if(state.current.kind==='longActive'){
     service = state.long?.type || service;
-    state.long = null;
-    state.current = null;
 
-    // log del largo con “done” (fase) NO sirve. Mejor: registramos estimado total como duración.
-    // Lo hacemos: duración = estimado total del servicio largo.
     const total = estFor(service);
     const endMin = nowMin();
     const startMin = endMin - total;
-
     state.log.push({ id: state.seq++, service, startMin, endMin, durationMin: total });
-    vibrate(90);
 
-    // si había corte pausado, reanudar
+    state.long = null;
+    state.current = null;
+
     if(state.pausedCut){
-      const c=state.pausedCut;
-      state.pausedCut=null;
+      const c=state.pausedCut; state.pausedCut=null;
       startCutFromPaused(c.service, c.remainingMin);
     }
+
+    vibrate(90);
     render();
     return;
   }
 
-  // aprendizaje solo para cortes
+  // Aprendizaje (solo cortes)
   const a = clamp(Number(state.cfg.learnAlpha || 0.22), 0, 1);
   if(a>0){
     const t=state.times;
@@ -1174,14 +1194,10 @@ finishDlg.addEventListener('close', () => {
 
   state.current = null;
   vibrate(80);
-
-  // al finalizar, no auto-iniciamos el siguiente: queda listo para tocar INICIAR
-  // (pero sí podrías iniciar manualmente y el “desaparece” de la cola si querés: no lo hacemos automático para no confundirte)
-
   render();
 });
 
-/* ===== ESPERA + confirmación cierre ===== */
+/* Espera + confirmación cierre */
 let pendingAdd = null;
 
 function projectedEndIfAdd(service){
@@ -1237,10 +1253,7 @@ waitDlg.addEventListener('close', () => {
 });
 
 overDlg.addEventListener('close', () => {
-  if(overDlg.returnValue!=='ok'){
-    pendingAdd = null;
-    return;
-  }
+  if(overDlg.returnValue!=='ok'){ pendingAdd = null; return; }
   if(!pendingAdd) return;
 
   const end = toMin(state.cfg.shiftEnd);
@@ -1257,7 +1270,7 @@ overDlg.addEventListener('close', () => {
   render();
 });
 
-/* DESHACER */
+/* Deshacer */
 undoBtn.addEventListener('click', () => {
   if(!state.queue.length) return;
   state.queue.pop();
@@ -1265,57 +1278,37 @@ undoBtn.addEventListener('click', () => {
   render();
 });
 
-/* ===== CANCELAR LARGO ===== */
+/* Cancelar / Reset largo */
+function cancelLongOnly(){
+  state.long = null;
+  if(state.current && state.current.kind==='longActive') state.current = null;
+
+  if(!state.current && state.pausedCut){
+    const c = state.pausedCut; state.pausedCut = null;
+    startCutFromPaused(c.service, c.remainingMin);
+  }
+  bgLine.style.display='none';
+}
+
 cancelLongBtn.addEventListener('click', () => {
-  const hasLong = !!state.long || (state.current && (state.current.kind==='longActive' || state.current.service==='color' || state.current.service==='perm'));
-  if(!hasLong){
-    alert('No hay Color/Permanente activo.');
-    return;
-  }
-  if(!confirm('Cancelar Color/Permanente activo (sin borrar registro ni aprendizaje)?')) return;
-
-  // cortar largo
-  state.long = null;
-  if(state.current && state.current.kind==='longActive'){
-    state.current = null;
-  }
-
-  // reanudar corte pausado si existía
-  if(!state.current && state.pausedCut){
-    const c = state.pausedCut;
-    state.pausedCut = null;
-    startCutFromPaused(c.service, c.remainingMin);
-  }
-
-  bgLine.style.display='none';
-  vibrate(120);
-  render();
-});
-
-/* ===== RESET LARGO / RESET TOTAL ===== */
-resetPhasesBtn.addEventListener('click', () => {
-  // “RESET LARGO” = resetea solo el trabajo largo, pero no toca cola ni registros
   const hasLong = !!state.long || (state.current && state.current.kind==='longActive');
-  if(!hasLong){
-    alert('No hay trabajo largo activo.');
-    return;
-  }
-  if(!confirm('Resetear solo el trabajo largo (Color/Permanente) sin tocar cola, registro ni aprendizaje?')) return;
-
-  state.long = null;
-  if(state.current && state.current.kind==='longActive'){
-    state.current = null;
-  }
-  if(!state.current && state.pausedCut){
-    const c = state.pausedCut;
-    state.pausedCut = null;
-    startCutFromPaused(c.service, c.remainingMin);
-  }
-  bgLine.style.display='none';
+  if(!hasLong){ alert('No hay Color/Permanente activo.'); return; }
+  if(!confirm('Cancelar Color/Permanente activo (sin borrar registro ni aprendizaje)?')) return;
+  cancelLongOnly();
   vibrate(120);
   render();
 });
 
+resetLongBtn.addEventListener('click', () => {
+  const hasLong = !!state.long || (state.current && state.current.kind==='longActive');
+  if(!hasLong){ alert('No hay trabajo largo activo.'); return; }
+  if(!confirm('Resetear solo el trabajo largo (Color/Permanente) sin tocar cola, registro ni aprendizaje?')) return;
+  cancelLongOnly();
+  vibrate(120);
+  render();
+});
+
+/* Reset total (sin borrar aprendizaje ni registro) */
 resetAllBtn.addEventListener('click', () => {
   if(!confirm('RESET TOTAL operativo: cancela corte, cola y largos. NO borra registro ni aprendizaje. ¿Confirmás?')) return;
   state.current = null;
@@ -1327,11 +1320,12 @@ resetAllBtn.addEventListener('click', () => {
   render();
 });
 
-/* ===== REGISTRO ===== */
+/* Registro */
 logBtn.addEventListener('click', () => {
   renderLog();
   logDlg.showModal();
 });
+
 copyBtn.addEventListener('click', async (e) => {
   e.preventDefault();
   const text = logToText();
@@ -1345,6 +1339,7 @@ copyBtn.addEventListener('click', async (e) => {
     setTimeout(()=>copyBtn.textContent='Copiar', 900);
   }
 });
+
 clearBtn.addEventListener('click', (e) => {
   e.preventDefault();
   if(!confirm('¿Borrar el registro del día? (no toca aprendizaje)')) return;
@@ -1354,7 +1349,7 @@ clearBtn.addEventListener('click', (e) => {
   render();
 });
 
-/* ===== AJUSTES ===== */
+/* Ajustes */
 function openSettings(){
   cfgEnd.value = state.cfg.shiftEnd;
   cfgHard.value = state.cfg.hardOver;
@@ -1409,7 +1404,6 @@ settingsDlg.addEventListener('close', () => {
   state.times.thermal.min = Number(thermMin.value||15);
   state.times.thermal.max = Number(thermMax.value||25);
 
-  // mantener promedios dentro del rango
   state.times.cut.avg = clamp(state.times.cut.avg, state.times.cut.min, state.times.cut.max);
   state.times.beard.avg = clamp(state.times.beard.avg, state.times.beard.min, state.times.beard.max);
   state.times.thermal.avg = clamp(state.times.thermal.avg, state.times.thermal.min, state.times.thermal.max);
@@ -1436,14 +1430,14 @@ settingsDlg.addEventListener('close', () => {
   render();
 });
 
-/* ===== Service Worker ===== */
+/* Service Worker (PWA) */
 if('serviceWorker' in navigator){
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').catch(()=>{});
   });
 }
 
-/* ===== Tick ===== */
+/* Tick */
 setInterval(render, 2000);
 render();
 </script>
